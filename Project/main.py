@@ -11,6 +11,7 @@ def set_company_nodes(graph):
     company_names = ["A", "B", "C", "D","E"]
     companies = sample(list(graph.nodes()), k=len(company_names))
     companies = [(x, Company(x, 1000, company_names[i], g)) for i,x in enumerate(companies)]
+    print(companies)
     cps = dict()
     for (node, c) in companies:
         cps[node] = c
@@ -54,9 +55,17 @@ clients = [n for n in g.nodes if "company" not in g.node[n]]
 for c in companies:
     c.setTrucks([Truck(i, c, g) for i in range(7)])
 
-for _ in range(10):
-    print("==============================================\n")
+for i in range(10000):
+    # print("==============================================\n")
     # explosoes random
     
     for c in companies:
+        if c.money <= 0:
+            print(f"GAME OVER FOR {c} at t={i}")
+            companies.remove(c)
+            continue
+        c.money -= 1
         c.go(g,randomOffers())
+
+
+draw_graph(g)

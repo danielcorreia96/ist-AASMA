@@ -2,6 +2,7 @@
 import networkx as nx
 from company import *
 from item import *
+from itertools import tee
 import math
 
 map_status = ["ocupado", "livre"]
@@ -12,6 +13,7 @@ map_status = ["ocupado", "livre"]
 class Truck:
 	def __init__(self, id, owner, g, capacity = 300):
 		self.id = id
+		self.pos = owner.pos
 		self.owner = owner
 		self.status = 1
 		self.items = []
@@ -38,20 +40,55 @@ class Truck:
 		self.graph = g
 
 	def addItem(self, item): # atribuir um pedido a um camiao
+		for curr_item in self.items:
+			if curr_item.target == item.target:
+				curr_item.value += item.value
+				return
 		self.items.append(item)
 		self.totalValue += item.getValue()
 
 	def go(self, g):
+		# atualizar grafo
+		self.updateGraph(g)
+
 		if self.getStatus() == "livre":
-			return
-		print(self)
-		self.calculate_path()
-		# calcular o caminho mais curto entre todos os vertices de destino
+			return		
+
+		# print(self)
+		for item in self.items:
+			if self.pos == item.target:
+				# print("deliver item to client")
+				self.items.remove(item)
+				# print(self.items)
+				if self.items == []:
+					# print(f"no more items. teleport to {self.owner}")
+					self.pos = self.owner.pos
+					self.setStatus("livre")
+					self.owner.money += self.totalValue
+					self.totalValue = 0
+					print(f"updated company: {self.owner}")
+				return
+
+		# 1. Get next position to move truck
+		next_node = self.get_next_node_in_path()
+
+		# 2. Move truck and update profit
+		next = next_node[1][1]
+		self.totalValue -= self.graph[self.pos][next]["weight"]
+		self.pos = next
 		# calcular preco da viagem
 		# notificar
 
-	def calculate_path(self):
-		print(self.items)
+	def get_next_node_in_path(self):
+		def pairwise(iterable):
+			a, b = tee(iterable)
+			next(b, None)
+			return zip(a, b)
+
+		all_sps = [(item, nx.shortest_path(self.graph, self.pos, item.target)) for item in self.items]
+		all_sps_costs = [(sum([self.graph[u][v]["weight"] for (u,v) in pairwise(sp)]), sp, item) for (item, sp) in all_sps]
+		# print(all_sps_costs)
+		return min(all_sps_costs, key=lambda x: x[0])
 
 	def getPrice(self, item): # devolver o melhor custo se adicionar o item ao truck
 		if self.getCapacity() < item.getValue() or self.getStatus() == "ocupado":
