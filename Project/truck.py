@@ -1,11 +1,4 @@
 #!/usr/bin/python
-# File:	truck.py
-# Description:	Truck node
-# Author:	Pedro M Orvalho & Daniel Correia
-# Created on:	03-05-2018 14:01:14
-# Usage:	python truck.py
-# Python version:	3.6.4
-
 import networkx as nx
 from company import *
 from item import *
@@ -52,9 +45,13 @@ class Truck:
 		if self.getStatus() == "livre":
 			return
 		print(self)
+		self.calculate_path()
 		# calcular o caminho mais curto entre todos os vertices de destino
 		# calcular preco da viagem
 		# notificar
+
+	def calculate_path(self):
+		print(self.items)
 
 	def getPrice(self, item): # devolver o melhor custo se adicionar o item ao truck
 		if self.getCapacity() < item.getValue() or self.getStatus() == "ocupado":
@@ -63,6 +60,4 @@ class Truck:
 		costs = [nx.shortest_path_length(self.graph,source=self.owner.pos,target=item.getTarget())]
 		costs += [nx.shortest_path_length(self.graph,source=i.getTarget(),target=item.getTarget()) for i in self.items]
 		return min(costs)
-
-
 

@@ -1,15 +1,11 @@
 #!/usr/bin/python
-# File:	item.py
-# Description:	Item node
-# Author:	Pedro M Orvalho & Daniel Correia
-# Created on:	03-05-2018 14:16:16
-# Usage:	python item.py
-# Python version:	3.6.4
-
 class Item:
 	def __init__(self, value, target):
 		self.value = value # value of item
 		self.target = target # client
+
+	def __repr__(self):
+		return f"Item with value {self.value} to client {self.target}"
 
 	def getValue(self):
 		return self.value

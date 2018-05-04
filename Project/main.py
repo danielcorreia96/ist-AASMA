@@ -6,7 +6,6 @@ from truck import *
 from item import *
      
 
-
 def set_company_nodes(graph):
     company_names = ["A", "B", "C", "D","E"]
     companies = sample(list(graph.nodes()), k=len(company_names))
@@ -43,7 +42,7 @@ for (u,v,w) in g.edges(data=True):
 g = set_company_nodes(g)
 
 
-draw_graph(g)
+# draw_graph(g)
 
 companies = [g.nodes[n]["company"] for n in g.nodes if "company" in g.node[n]]
 clients = [n for n in g.nodes if "company" not in g.node[n]]
@@ -52,6 +51,7 @@ for c in companies:
     c.setTrucks([Truck(i, c, g) for i in range(7)])
 
 for _ in range(10):
+    print("==============================================\n")
     # explosoes random
     
     for c in companies:

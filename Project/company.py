@@ -1,11 +1,4 @@
 #!/usr/bin/python
-# File:	company.py
-# Description: Company node
-# Author:	Pedro M Orvalho & Daniel Correia
-# Created on:	03-05-2018 14:06:39
-# Usage:	python company.py
-# Python version:	3.6.4
-
 from truck import *
 import math
 import random
@@ -46,7 +39,7 @@ class Company:
 		# vai-se subtrair o custo do caminho feito até agora
 		
 	def go(self, g, offers):
-		print(self)
+		# print(f"{self} -- {offers}")
 		for t in self.trucks:
 			t.go(g)
 		
