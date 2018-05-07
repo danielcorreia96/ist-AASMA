@@ -33,7 +33,7 @@ class Truck:
 	def getId(self):
 		return self.id
 
-	def getCapacity(self):
+	def getCapacity(self): # o espaco que o truck ainda tem
 		return self.capacity - self.totalValue 
 
 	def updateGraph(self, g):
@@ -62,16 +62,16 @@ class Truck:
 				# print(self.items)
 				if self.items == []:
 					# print(f"no more items. teleport to {self.owner}")
-					self.pos = self.owner.pos
-					self.setStatus("livre")
-					self.owner.money += self.totalValue
-					self.totalValue = 0
-					print(f"updated company: {self.owner}")
-				return
+					self.finalStep(1)
+					return
 
 		# 1. Get next position to move truck
-		next_node = self.get_next_node_in_path()
-
+		try:
+			next_node = self.get_next_node_in_path()
+		except Exception as e:
+			self.finalStep(-1)
+			return
+		
 		# 2. Move truck and update profit
 		next = next_node[1][1]
 		self.totalValue -= self.graph[self.pos][next]["weight"]
@@ -90,11 +90,21 @@ class Truck:
 		# print(all_sps_costs)
 		return min(all_sps_costs, key=lambda x: x[0])
 
+	def finalStep(self, signal):
+		self.pos = self.owner.pos
+		self.setStatus("livre")
+		self.owner.money = self.owner.money + signal* self.totalValue
+		self.totalValue = 0
+		print(f"updated company: {self.owner}")
+
 	def getPrice(self, item): # devolver o melhor custo se adicionar o item ao truck
 		if self.getCapacity() < item.getValue() or self.getStatus() == "ocupado":
 			return math.inf
-
-		costs = [nx.shortest_path_length(self.graph,source=self.owner.pos,target=item.getTarget())]
-		costs += [nx.shortest_path_length(self.graph,source=i.getTarget(),target=item.getTarget()) for i in self.items]
+		try:
+			costs = [nx.shortest_path_length(self.graph,source=self.owner.pos,target=item.getTarget())]
+			costs += [nx.shortest_path_length(self.graph,source=i.getTarget(),target=item.getTarget()) for i in self.items]
+		except Exception as e:
+			return math.inf
+		
 		return min(costs)
 

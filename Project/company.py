@@ -26,7 +26,7 @@ class Company:
 
 	def updateTrucks(self):
 		for t in self.trucks:
-			if t.getCapacity() <= 50: # 3 e um numero arbitrario, reduzir possivelmente para zero
+			if t.getCapacity() <= 125: # muito baixo trucks não vão distribuir
 				t.setStatus("ocupado")
 
 	def receiveMoney(self, value, truck):
@@ -41,6 +41,7 @@ class Company:
 	def go(self, g, offers):
 		# print(f"{self} -- {offers}")
 		self.graph = g
+		
 		for t in self.trucks:
 			t.go(g)
 		
