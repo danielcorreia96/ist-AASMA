@@ -1,82 +1,73 @@
 import networkx as nx
 import matplotlib.pylab as plt
 from random import randint, sample
+import graph_utils
 from company import *
 from truck import *
 from item import *
      
-colors = ['#8B0000','#8FBC8F','#00BFFF','#B22222','#FF69B4','#90EE90','#87CEFA', '#00FF00','#000080','#FF6347','#9ACD32']#,'#7FFF00','#FF7F50','#6495ED','#FFF8DC','#DC143C','#00FFFF','#00008B','#008B8B','#B8860B','#A9A9A9','#006400','#BDB76B','#8B008B']
-company_names = ["A", "B", "C", "D","E"]
-colormap = []
-def set_company_nodes(graph):
-
+company_names = ["A", "B", "C", "D","E","F","G","H","I","J","K"]
+def generate_companies(graph, n_companies=5):
+    # create companies
+    companies = sample(list(graph.nodes()), k=n_companies)
+    companies = [(x, Company(x, 1000, company_names[i], graph)) for i,x in enumerate(companies)]
     print(companies)
-    cps = dict()
-    for (node, c) in companies:
-        cps[node] = c
-    nx.set_node_attributes(graph, cps, name="company")
-    return graph
+    graph_utils.set_company_nodes(graph, companies)
+    return companies
 
-
-def randColor(colormap):
-    color = colors[randint(0,len(colors)-1)]
-    while color in colormap:
-        color = colors[randint(0,len(colors)-1)]
-    return color
-
-def draw_graph(graph):            
-    d = dict(nx.degree(graph))
-    pos = nx.spring_layout(graph) 
-    plt.figure()
-    nx.draw(graph, pos=pos, with_labels=graph.nodes().values(),nodelist=d.keys(), node_size=[(v+1) * 100 for v in d.values()], node_color=colormap)
-    labels = nx.get_edge_attributes(graph,'weight')
-    nx.draw_networkx_edge_labels(graph,pos, edge_labels=labels)
-      
-
-def randomOffers():
-    return [Item(randint(20,50), clients[randint(0,len(clients)-1)]) for _ in range(randint(0,10))]
-
-
-g = nx.gnp_random_graph(15, 0.20, seed=1)
-for (u,v,w) in g.edges(data=True):
-    w['weight'] = randint(1,10)
-
-companies = sample(list(g.nodes()), k=len(company_names))
-companies = [(x, Company(x, 1000, company_names[i], g)) for i,x in enumerate(companies)]
-g = set_company_nodes(g)
-
-for n in g.nodes:
-    colormap.append(randColor(colormap)) if "company" in g.node[n] else colormap.append("#%06x" % 0xDDDDDD)
-
-draw_graph(g)
-p_remove = 0.0005 # por random
-clients = [n for n in g.nodes if "company" not in g.node[n]]
-
-for c in companies:
-    c[1].setTrucks([Truck(i, c[1], g) for i in range(7)])
-
-for i in range(10000):
-
-    if random.random() < p_remove:    
-        try:
-            e = random.choice(list(g.edges()))
-        except Exception as e:
-            print(f"\tall edges removed t= {i}\t")
-            exit()
-        g.remove_edge(e[0],e[1])    
-        print("\tedge removed:\t {} -- {}".format(e[0], e[1]))    
-        
+def generate_trucks(graph, companies, n_trucks=7):
     for c in companies:
-        if c[1].money <= 0:
-            print(f"GAME OVER FOR {c[1]} at t={i}")
-            companies.remove(c)
-            del g.node[c[0]]['company']
-            colormap[c[0]]= "#%06x" % 0xDDDDDD
-            # possivel compra por outras empresas
-            continue
-        offers = randomOffers()
-        c[1].money -= len(offers)
-        c[1].go(g,offers)
+        c[1].setTrucks([Truck(i, c[1], graph) for i in range(n_trucks)])
 
-draw_graph(g)
-plt.show()
+def generate_offers(clients, min_offers=0, max_offers=10, min_val=20, max_val=40):
+    return [Item(randint(min_val,max_val), clients[randint(0,len(clients)-1)]) for _ in range(randint(min_offers,max_offers))]
+
+def do_edge_explosion(t,graph):
+    try:
+        e = random.choice(list(graph.edges()))
+    except Exception as e:
+        print(f"\tall edges removed t= {t}\t")
+        exit()
+    graph.remove_edge(e[0],e[1])
+    print(f"\tedge removed:\t {e[0]} -- {e[1]} (t={t})")
+
+def do_game_over(companies, company, graph,t):
+    print(f"GAME OVER FOR {company[1]} at t={t}")
+    companies.remove(company)
+    del graph.node[company[0]]['company']
+    graph_utils.colormap[company[0]]= "#%06x" % 0xDDDDDD
+
+
+def main():
+    g = graph_utils.generate_weighted_random_graph()
+    # g = graph_utils.generate_weighted_barabasi_graph()
+
+    companies = generate_companies(g, n_companies=5)
+    generate_trucks(g, companies, n_trucks=7)
+    clients = [n for n in g.nodes if "company" not in g.node[n]]
+
+    # graph_utils.draw_graph(g)
+
+    p_remove = 0.0002 # por random
+
+    for i in range(10000):
+        if random.random() < p_remove:
+            do_edge_explosion(i,g)
+
+        for c in companies:
+            if c[1].money <= 0:
+                do_game_over(companies, c, g,i)
+                continue
+
+            offers = generate_offers(clients)
+            c[1].money -= (c[1].money*0.05 + len(offers))
+            c[1].go(g,offers)
+
+    for c in companies:
+        print(f"SURVIVOR: {c} -- t={i}")
+
+    # graph_utils.draw_graph(g)
+    # graph_utils.show_graphs()
+
+if __name__ == '__main__':
+    main()

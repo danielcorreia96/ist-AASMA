@@ -96,7 +96,7 @@ class Truck:
 		self.setStatus("livre")
 		self.owner.money = self.owner.money + signal* self.totalValue
 		self.totalValue = 0
-		print(f"updated company: {self.owner}")
+		# print(f"updated company: {self.owner}")
 
 	def getPrice(self, item): # devolver o melhor custo se adicionar o item ao truck
 		if self.getCapacity() < item.getValue() or self.getStatus() == "ocupado":
