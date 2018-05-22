@@ -43,6 +43,7 @@ class Truck:
 		for curr_item in self.items:
 			if curr_item.target == item.target:
 				curr_item.value += item.value
+				self.totalValue += item.value
 				return
 		self.items.append(item)
 		self.totalValue += item.getValue()

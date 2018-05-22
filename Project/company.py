@@ -19,14 +19,18 @@ class Company:
 		self.trucks = trucks
 
 	def chooseTruck(self, item):
-		costs = [t.getPrice(item) for t in self.trucks]
-		minimum = min(costs)
-		truck = self.trucks[costs.index(minimum)]
-		truck.addItem(item)
+		free_trucks = [t for t in self.trucks if t.getStatus() == "livre"]
+		if free_trucks == []:
+			return
+		else:
+			costs = [t.getPrice(item) for t in free_trucks]
+			minimum = min(costs)
+			truck = free_trucks[costs.index(minimum)]
+			truck.addItem(item)
 
 	def updateTrucks(self):
 		for t in self.trucks:
-			if t.getCapacity() <= 125: # muito baixo trucks não vão distribuir
+			if t.getCapacity() <= 25: # muito baixo trucks não vão distribuir
 				t.setStatus("ocupado")
 
 	def receiveMoney(self, value, truck):
