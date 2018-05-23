@@ -22,17 +22,18 @@ class Client:
 		pref = np.array([random() for _ in range(len(companies))])
 		return list(pref/sum(pref))
 
-	def generate_offer(self):
-		return Offer(self, randint(self.min_offer_val, self.max_offer_val)) if random() < self.risk else None
+	def generate_offer(self, i):
+		return Offer(self.pos, randint(self.min_offer_val, self.max_offer_val), i) if random() < self.risk else None
 
 	def chooseBestBid(self, bids):
 		bids_values = [self.utilities[i]*bids[i] for i in range(len(bids))]
 		return bids_values.index(min(bids_values))
 
-	def go(self):
-		offer = self.generate_offer();
+	def go(self, i):
+		offer = self.generate_offer(i);
 		if offer != None:
-			company = self.chooseBestBid([c.getBid(offer).getValue() for c in self.companies])
-			if offer.getValue() != math.inf:
-				self.companies[company].setOffer(offer)
+			offers = [c.getBid(offer) for c in self.companies]
+			company = self.chooseBestBid([o.getValue() for o in offers])
+			if offers[company].getValue() != math.inf:
+				self.companies[company].setOffer(offers[company])
 				# print("Client ", self.pos, " requesting offer from ", self.companies[company].pos)

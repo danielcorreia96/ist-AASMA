@@ -51,20 +51,25 @@ def main():
         if not len(companies):
             print("NO MORE COMPANIES")
             break
+        if len(companies) == 1:
+            print("Winner: ", companies[0][1])
+            return
         if random() < p_remove:
             do_edge_explosion(i,g)
 
         for cli in clients:
-            cli.go()
+            cli.go(i)
 
         for c in companies:
             if c[1].money <= 0:
                 do_game_over(companies, c, g,i)
                 continue
 
-            # offers = generate_offers(clients)
-            # c[1].money -= c[1].money*0.05
-            c[1].go(g)
+            c[1].money -= c[1].money*0.001 # impostos por existencia
+            c[1].go(g, i)
+
+            # if not i % 100:
+            #     print(c[1])
 
     for c in companies:
         print(f"SURVIVOR: {c} -- t={i}")

@@ -5,7 +5,7 @@ import math
 from random import *
 
 class Company:
-	def __init__(self, pos, money, name, g, uni_cost=1, truck_threshold=25, profit_margin=1.5, tax=0.05):
+	def __init__(self, pos, money, name, g, uni_cost=1, truck_threshold=100, profit_margin=1.5, tax=0.05):
 		self.pos = pos
 		self.money = money
 		self.name = name
@@ -16,7 +16,7 @@ class Company:
 		self.truck_threshold = truck_threshold
 		self.profit_margin = profit_margin
 		self.tax = tax
-
+		
 	def __repr__(self):
 		return f"Company {self.name} with {self.money} euros"
 
@@ -26,21 +26,28 @@ class Company:
 	def getBestPrice(self, item):
 		free_trucks = [t for t in self.trucks if t.getStatus() == "livre"]
 		if free_trucks == []:
-			return
+			return False
 		else:
 			costs = [t.getPrice(item) for t in free_trucks]
 			minimum = min(costs)
-		return minimum, costs, free_trucks
+		return minimum
 
 	def chooseTruck(self, item):
-		minimum, costs, free_trucks = self.getBestPrice(item)
+		free_trucks = [t for t in self.trucks if t.getStatus() == "livre"]
+		if free_trucks == []:
+			return 
+		else:
+			costs = [t.getPrice(item) for t in free_trucks]
+			minimum = min(costs)
 		if not minimum:
-			return
+			return False
 		truck = free_trucks[costs.index(minimum)]
 		truck.addItem(item)
+		return True
 
 	def updateTrucks(self):
-		for t in self.trucks:
+		free_trucks = [t for t in self.trucks if t.getStatus() == "livre"]
+		for t in free_trucks:
 			if t.getCapacity() <= self.truck_threshold: # muito baixo trucks não vão distribuir
 				t.setStatus("ocupado")
 
@@ -54,31 +61,44 @@ class Company:
 		# vai-se subtrair o custo do caminho feito até agora
 		
 	def getBid(self, offer):
+		if self.money <=0:
+			offer.setValue(math.inf)
+			return offer
+
 		offer.setValue(offer.getQuantity()*self.uniCost)
 		minimum = self.getBestPrice(offer)
 		if not minimum:
 			offer.setValue(math.inf)
 			return offer
-		offer.setValue((offer.getValue()+minimum[0])*self.profit_margin)
+
+		val = (offer.getValue()+minimum)*self.profit_margin
+		offer.setValue(val*self.tax + val)
 		return offer
 
 	def setOffer(self, offer):
-		self.offers += [offer]
+		self.offers.append(offer)
 		self.money -= self.tax*offer.getValue()
 
-	def go(self, g):
+	def cleanOldOffers(self, i):
+		for o in self.offers:
+			if i - o.getTimestamp() > 5:
+				self.offers.remove(o)
+
+	def go(self, g, i):
 		# print(f"{self} -- {offers}")
-		# print(self.offers)
 		self.graph = g
 		
 		for t in self.trucks:
 			t.go(g)
 		
-		# self.offers += offers
+		self.cleanOldOffers(i)
 
 		for o in self.offers:
-			self.chooseTruck(o)
+			success = self.chooseTruck(o)
 			self.offers.remove(o)
+		
+		# if not not self.offers:
+			# print(len(self.offers), " not empty and num free trucks ", len([t for t in self.trucks if t.getStatus() == "livre"]), "   ", self)
 
 		self.updateTrucks()
 

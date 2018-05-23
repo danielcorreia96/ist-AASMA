@@ -41,13 +41,16 @@ class Truck:
 		self.graph = g
 
 	def addItem(self, item): # atribuir um pedido a um camiao
+		# print(f"item added to company: {self.owner}")
 		for curr_item in self.items:
 			if curr_item.target == item.target:
 				curr_item.value += item.value
 				self.totalValue += item.value
+				self.capacity += item.getQuantity()
 				return
 		self.items.append(item)
 		self.totalValue += item.getValue()
+		self.capacity += item.getQuantity()
 
 	def go(self, g):
 		# atualizar grafo
@@ -56,9 +59,8 @@ class Truck:
 		if self.getStatus() == "livre":
 			return		
 
-		# print(self)
 		for item in self.items:
-			if self.pos == item.target:
+			if self.pos == item.getTarget():
 				# print("deliver item to client")
 				self.items.remove(item)
 				# print(self.items)
@@ -94,9 +96,10 @@ class Truck:
 
 	def finalStep(self, signal):
 		self.pos = self.owner.pos
-		self.setStatus("livre")
 		self.owner.money = self.owner.money + signal*self.totalValue
 		self.totalValue = 0
+		self.capacity = 0
+		self.setStatus("livre")
 		# print(f"updated company: {self.owner}")
 
 	def getPrice(self, item): # devolver o melhor custo se adicionar o item ao truck
