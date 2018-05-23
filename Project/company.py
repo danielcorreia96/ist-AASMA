@@ -5,14 +5,17 @@ import math
 from random import *
 
 class Company:
-	def __init__(self, pos, money, name, g):
+	def __init__(self, pos, money, name, g, uni_cost=1, truck_threshold=25, profit_margin=1.5, tax=0.05):
 		self.pos = pos
 		self.money = money
 		self.name = name
 		self.offers = []
 		self.trucks = []
 		self.graph = g
-		self.uniCost = 1 # variar posteriormente
+		self.uniCost = uni_cost
+		self.truck_threshold = truck_threshold
+		self.profit_margin = profit_margin
+		self.tax = tax
 
 	def __repr__(self):
 		return f"Company {self.name} with {self.money} euros"
@@ -38,7 +41,7 @@ class Company:
 
 	def updateTrucks(self):
 		for t in self.trucks:
-			if t.getCapacity() <= 25: # muito baixo trucks não vão distribuir
+			if t.getCapacity() <= self.truck_threshold: # muito baixo trucks não vão distribuir
 				t.setStatus("ocupado")
 
 	def receiveMoney(self, value, truck):
@@ -56,12 +59,12 @@ class Company:
 		if not minimum:
 			offer.setValue(math.inf)
 			return offer
-		offer.setValue((offer.getValue()+minimum[0])*(1+random()))
+		offer.setValue((offer.getValue()+minimum[0])*self.profit_margin)
 		return offer
 
 	def setOffer(self, offer):
 		self.offers += [offer]
-		self.money -= 0.05*offer.getValue()
+		self.money -= self.tax*offer.getValue()
 
 	def go(self, g):
 		# print(f"{self} -- {offers}")

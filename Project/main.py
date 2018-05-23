@@ -19,9 +19,6 @@ def generate_trucks(graph, companies, n_trucks=7):
     for c in companies:
         c[1].setTrucks([Truck(i, c[1], graph) for i in range(n_trucks)])
 
-# def generate_offers(clients, min_offers=0, max_offers=10, min_val=20, max_val=40):
-#     return [Item(randint(min_val,max_val), clients[randint(0,len(clients)-1)]) for _ in range(randint(min_offers,max_offers))]
-
 def do_edge_explosion(t,graph):
     try:
         e = choice(list(graph.edges()))
@@ -44,7 +41,7 @@ def main():
 
     companies = generate_companies(g, n_companies=5)
     generate_trucks(g, companies, n_trucks=7)
-    clients = [Client(n, [c[1] for c in companies]) for n in g.nodes if "company" not in g.node[n]]
+    clients = [Client(n, [c[1] for c in companies], min_offer_val=20, max_offer_val=100) for n in g.nodes if "company" not in g.node[n]]
 
     # graph_utils.draw_graph(g)
 

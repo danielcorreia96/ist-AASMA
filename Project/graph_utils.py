@@ -23,13 +23,13 @@ def show_graphs():
     plt.show()
 
 def generate_weighted_random_graph(n=15, p=0.2, min_weight=1, max_weight=10):
-    g = nx.gnp_random_graph(n, p, seed=1)
+    g = nx.gnp_random_graph(n, p, seed=randint(1,100))
     for (u,v,w) in g.edges(data=True):
         w['weight'] = randint(min_weight, max_weight)
     return g
 
 def generate_weighted_barabasi_graph(n=20, m=3, min_weight=1, max_weight=10):
-    g = nx.barabasi_albert_graph(n, m, seed=1)
+    g = nx.barabasi_albert_graph(n, m, seed=randint(1,100))
     for (u,v,w) in g.edges(data=True):
         w['weight'] = randint(min_weight, max_weight)
     return g
