@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import networkx as nx
 from company import *
-from item import *
+from offer import *
 from itertools import tee
 import math
 
@@ -17,7 +17,8 @@ class Truck:
 		self.owner = owner
 		self.status = 1
 		self.items = []
-		self.capacity = capacity
+		self.totalCapacity = capacity
+		self.capacity = 0
 		self.totalValue = 0
 		self.graph = g
 
@@ -34,7 +35,7 @@ class Truck:
 		return self.id
 
 	def getCapacity(self): # o espaco que o truck ainda tem
-		return self.capacity - self.totalValue 
+		return self.totalCapacity - self.capacity 
 
 	def updateGraph(self, g):
 		self.graph = g
@@ -94,12 +95,12 @@ class Truck:
 	def finalStep(self, signal):
 		self.pos = self.owner.pos
 		self.setStatus("livre")
-		self.owner.money = self.owner.money + signal* self.totalValue
+		self.owner.money = self.owner.money + signal*self.totalValue
 		self.totalValue = 0
 		# print(f"updated company: {self.owner}")
 
 	def getPrice(self, item): # devolver o melhor custo se adicionar o item ao truck
-		if self.getCapacity() < item.getValue() or self.getStatus() == "ocupado":
+		if self.getCapacity() < item.getQuantity() or self.getStatus() == "ocupado":
 			return math.inf
 		try:
 			costs = [nx.shortest_path_length(self.graph,source=self.owner.pos,target=item.getTarget())]

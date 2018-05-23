@@ -1,10 +1,10 @@
 import networkx as nx
 import matplotlib.pylab as plt
-from random import randint, sample
+from random import *
 import graph_utils
 from company import *
 from truck import *
-from item import *
+from client import *
      
 company_names = ["A", "B", "C", "D","E","F","G","H","I","J","K"]
 def generate_companies(graph, n_companies=5):
@@ -19,12 +19,12 @@ def generate_trucks(graph, companies, n_trucks=7):
     for c in companies:
         c[1].setTrucks([Truck(i, c[1], graph) for i in range(n_trucks)])
 
-def generate_offers(clients, min_offers=0, max_offers=10, min_val=20, max_val=40):
-    return [Item(randint(min_val,max_val), clients[randint(0,len(clients)-1)]) for _ in range(randint(min_offers,max_offers))]
+# def generate_offers(clients, min_offers=0, max_offers=10, min_val=20, max_val=40):
+#     return [Item(randint(min_val,max_val), clients[randint(0,len(clients)-1)]) for _ in range(randint(min_offers,max_offers))]
 
 def do_edge_explosion(t,graph):
     try:
-        e = random.choice(list(graph.edges()))
+        e = choice(list(graph.edges()))
     except Exception as e:
         print(f"\tall edges removed t= {t}\t")
         exit()
@@ -44,24 +44,30 @@ def main():
 
     companies = generate_companies(g, n_companies=5)
     generate_trucks(g, companies, n_trucks=7)
-    clients = [n for n in g.nodes if "company" not in g.node[n]]
+    clients = [Client(n, [c[1] for c in companies]) for n in g.nodes if "company" not in g.node[n]]
 
     # graph_utils.draw_graph(g)
 
     p_remove = 0.0002 # por random
 
     for i in range(10000):
-        if random.random() < p_remove:
+        if not len(companies):
+            print("NO MORE COMPANIES")
+            break
+        if random() < p_remove:
             do_edge_explosion(i,g)
+
+        for cli in clients:
+            cli.go()
 
         for c in companies:
             if c[1].money <= 0:
                 do_game_over(companies, c, g,i)
                 continue
 
-            offers = generate_offers(clients)
-            c[1].money -= (c[1].money*0.05 + len(offers))
-            c[1].go(g,offers)
+            # offers = generate_offers(clients)
+            # c[1].money -= c[1].money*0.05
+            c[1].go(g)
 
     for c in companies:
         print(f"SURVIVOR: {c} -- t={i}")
