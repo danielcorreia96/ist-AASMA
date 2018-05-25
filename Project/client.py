@@ -28,8 +28,8 @@ class Client:
 		bids_values = [(1-self.utilities[i])*bids[i] for i in range(len(bids))]
 		return bids_values.index(min(bids_values))
 
-	def serCompanies(companies):
-		self.companies = companies
+	def removeCompany(self, company):
+		self.companies.remove(company)
 
 	def go(self, i):
 		offer = self.generate_offer(i);

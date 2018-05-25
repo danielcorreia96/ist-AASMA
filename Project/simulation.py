@@ -105,6 +105,7 @@ class Simulation(object):
 		companies.remove(company)
 		del graph.node[company[0]]['company']
 		graph_utils.colormap[company[0]]= "#%06x" % 0xDDDDDD
+		return company[1]
 
 	def run(self):
 		g = self.build_graph()
@@ -132,12 +133,12 @@ class Simulation(object):
 			for c in companies:
 				if c[1].money <= 0:
 					self.completedOffers += c[1].getCompletedOffers()
-					self.do_game_over(companies, c, g, i)
+					company_gameover = self.do_game_over(companies, c, g, i)
 					for cli in clients:
-						cli.setCompanies(companies)
+						cli.removeCompany(company_gameover)
 					continue
 
-				# c[1].money -= c[1].money*self.existence_tax # impostos por existencia
+				c[1].money -= self.company_init_money*self.existence_tax # impostos por existencia
 				c[1].go(g, i)
 
 		for c in companies:
@@ -155,7 +156,7 @@ def main():
 		uni_cost=1, profit_margin=1.5, tax=0.05,
 		risk=(randint(1,99)/100),
 		min_offer_val=20, max_offer_val=100,
-		existence_tax=0.001, p_edge_explosion=0.0002, p_truck_explosion=0.01)
+		existence_tax=0.01, p_edge_explosion=0.0002, p_truck_explosion=0.01)
 	
 	s.run()
 
