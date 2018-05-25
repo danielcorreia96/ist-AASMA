@@ -10,7 +10,7 @@ company_names = ["A", "B", "C", "D","E","F","G","H","I","J","K"]
 def generate_companies(graph, n_companies=5):
     # create companies
     companies = sample(list(graph.nodes()), k=n_companies)
-    companies = [(x, Company(x, 1000, company_names[i], graph,
+    companies = [(x, Company(x, 10000, company_names[i], graph,
             uni_cost=1, truck_threshold=100, profit_margin=1.5, tax=0.05
             )) for i,x in enumerate(companies)]
     print(companies)
@@ -31,7 +31,7 @@ def do_edge_explosion(t,graph):
     print(f"\tedge removed:\t {e[0]} -- {e[1]} (t={t})")
 
 def do_game_over(companies, company, graph,t):
-    print(f"GAME OVER FOR {company[1]} at t={t}")
+    print(f"GAME OVER FOR {company[1]} at t={t} -- offers={company[1].completedOffers}")
     companies.remove(company)
     del graph.node[company[0]]['company']
     graph_utils.colormap[company[0]]= "#%06x" % 0xDDDDDD
@@ -53,10 +53,12 @@ def main():
         if not len(companies):
             print("NO MORE COMPANIES")
             break
+
         if len(companies) == 1:
-            print("Winner: ", companies[0][1])
+            print(f"WINNER: {c} -- t={i} -- offers={companies[0][1].completedOffers}")
             return
-        if random() < p_remove:
+
+        if (randint(1,99)/100) < p_remove:
             do_edge_explosion(i,g)
 
         for cli in clients:
@@ -65,6 +67,8 @@ def main():
         for c in companies:
             if c[1].money <= 0:
                 do_game_over(companies, c, g,i)
+                for cli in clients:
+                    cli.setCompanies(companies)
                 continue
 
             # c[1].money -= c[1].money*0.001 # impostos por existencia
@@ -74,7 +78,7 @@ def main():
             #     print(c[1])
 
     for c in companies:
-        print(f"SURVIVOR: {c} -- t={i}")
+        print(f"SURVIVOR: {c} -- t={i} -- offers={c[1].completedOffers}")
 
     # graph_utils.draw_graph(g)
     # graph_utils.show_graphs()

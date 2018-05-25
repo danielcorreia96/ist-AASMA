@@ -12,7 +12,7 @@ class Simulation(object):
 		n_nodes, graph_type, graph_param, graph_min_weight, graph_max_weight,
 		n_companies, n_trucks, 
 		truck_threshold, company_init_money, uni_cost, profit_margin, tax,
-		risk, utilities, min_offer_val, max_offer_val,
+		risk, min_offer_val, max_offer_val,
 		existence_tax, p_edge_explosion, p_truck_explosion):
 
 		# network params
@@ -35,7 +35,7 @@ class Simulation(object):
 
 		# client params
 		self.risk = risk
-		self.utilities = utilities
+		# self.utilities = utilities
 		self.min_offer_val = min_offer_val
 		self.max_offer_val = max_offer_val
 
@@ -43,6 +43,8 @@ class Simulation(object):
 		self.existence_tax = existence_tax
 		self.p_edge_explosion = p_edge_explosion
 		self.p_truck_explosion = p_truck_explosion		
+
+		self.completedOffers = 0
 
 	def build_graph(self):
 		if self.graph_type == "random":
@@ -75,11 +77,17 @@ class Simulation(object):
 		for c in companies:
 			c[1].setTrucks([Truck(i, c[1], graph) for i in range(self.n_trucks)])
 
+	def calculateUtilities(self):
+		pref = np.array([(randint(1,99)/100) for _ in range(self.n_companies)])
+		return list(pref/sum(pref))
+		# return [1 for _ in range(self.n_companies)]
+
 	def generate_clients(self, graph, companies):
+		i=0
 		return [Client(n, 
 					[c[1] for c in companies],
 					risk=self.risk,
-					utilities=self.utilities, 
+					utilities=self.calculateUtilities(),
 					min_offer_val=self.min_offer_val, 
 					max_offer_val=self.max_offer_val) for n in graph.nodes if "company" not in graph.node[n]]
 
@@ -93,7 +101,7 @@ class Simulation(object):
 		print(f"\tedge removed:\t {e[0]} -- {e[1]} (t={t})")
 
 	def do_game_over(self, companies, company, graph,t):
-		print(f"GAME OVER FOR {company[1]} at t={t}")
+		print(f"GAME OVER FOR {company[1]} at t={t} -- offers={company[1].completedOffers}")
 		companies.remove(company)
 		del graph.node[company[0]]['company']
 		graph_utils.colormap[company[0]]= "#%06x" % 0xDDDDDD
@@ -103,15 +111,19 @@ class Simulation(object):
 		companies = self.generate_companies(g)
 		self.generate_trucks(g, companies)
 		clients = self.generate_clients(g, companies)
-
+		# graph_utils.draw_graph(g)
+		# graph_utils.show_graphs()
+		# return
 		for i in range(10000):
 			if len(companies) == 0:
 				print("NO MORE COMPANIES")
 				return
+
 			if len(companies) == 1:
-				print("Winner: ", companies[0][1])
+				print(f"WINNER: {c} -- t={i} -- offers={companies[0][1].completedOffers}")
 				return
-			if random() < self.p_edge_explosion:
+
+			if (randint(1,99)/100) < self.p_edge_explosion:
 				self.do_edge_explosion(i, g)
 
 			for cli in clients:
@@ -119,31 +131,30 @@ class Simulation(object):
 
 			for c in companies:
 				if c[1].money <= 0:
+					self.completedOffers += c[1].getCompletedOffers()
 					self.do_game_over(companies, c, g, i)
+					for cli in clients:
+						cli.setCompanies(companies)
 					continue
 
 				# c[1].money -= c[1].money*self.existence_tax # impostos por existencia
 				c[1].go(g, i)
 
-				# if not i % 100:
-				#     print(c[1])
-
 		for c in companies:
-			print(f"SURVIVOR: {c} -- t={i}")
+			print(f"SURVIVOR: {c} -- t={i} -- offers={c[1].completedOffers}")
+			self.completedOffers += c[1].getCompletedOffers()
 
+		print(f"OFFERS COMPLETED: {self.completedOffers}")
 
 def main():
-	def calculateUtilities(n_companies):
-		pref = np.array([random() for _ in range(n_companies)])
-		return list(pref/sum(pref))
 
 	s = Simulation(
-		n_nodes=15, graph_type="random", graph_param=0.2, 
+		n_nodes=20, graph_type="random", graph_param=0.2, 
 		graph_min_weight=1, graph_max_weight=10,
-		n_companies=5, n_trucks=7, truck_threshold=100, company_init_money=1000,
+		n_companies=5, n_trucks=7, truck_threshold=100, company_init_money=2500,
 		uni_cost=1, profit_margin=1.5, tax=0.05,
-		risk=random(), utilities=calculateUtilities(5),
-		min_offer_val=20 , max_offer_val=100,
+		risk=(randint(1,99)/100),
+		min_offer_val=20, max_offer_val=100,
 		existence_tax=0.001, p_edge_explosion=0.0002, p_truck_explosion=0.01)
 	
 	s.run()

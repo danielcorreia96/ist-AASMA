@@ -41,7 +41,6 @@ class Truck:
 		self.graph = g
 
 	def addItem(self, item): # atribuir um pedido a um camiao
-		# print(f"item added to company: {self.owner}")
 		for curr_item in self.items:
 			if curr_item.target == item.target:
 				curr_item.value += item.value
@@ -51,6 +50,7 @@ class Truck:
 		self.items.append(item)
 		self.totalValue += item.getValue()
 		self.capacity += item.getQuantity()
+		# print(f"item added to truck: {len(self.items)}")
 
 	def go(self, g):
 		# atualizar grafo
@@ -110,6 +110,6 @@ class Truck:
 			costs += [nx.shortest_path_length(self.graph,source=i.getTarget(),target=item.getTarget()) for i in self.items]
 		except Exception as e:
 			return math.inf
-		
+		# print("returning the minimum ",min(costs)," for this truck ", self)
 		return min(costs)
 

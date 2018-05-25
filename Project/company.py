@@ -16,6 +16,7 @@ class Company:
 		self.truck_threshold = truck_threshold
 		self.profit_margin = profit_margin
 		self.tax = tax
+		self.completedOffers = 0
 		
 	def __repr__(self):
 		return f"Company {self.name} with {self.money} euros"
@@ -35,12 +36,14 @@ class Company:
 	def chooseTruck(self, item):
 		free_trucks = [t for t in self.trucks if t.getStatus() == "livre"]
 		if free_trucks == []:
-			return 
+			return False
 		else:
 			costs = [t.getPrice(item) for t in free_trucks]
 			minimum = min(costs)
-		if not minimum:
+
+		if minimum == math.inf:
 			return False
+
 		truck = free_trucks[costs.index(minimum)]
 		truck.addItem(item)
 		return True
@@ -67,12 +70,13 @@ class Company:
 
 		offer.setValue(offer.getQuantity()*self.uniCost)
 		minimum = self.getBestPrice(offer)
-		if not minimum:
+		if minimum == math.inf:
 			offer.setValue(math.inf)
 			return offer
 
 		val = (offer.getValue()+minimum)*self.profit_margin
-		offer.setValue(val*self.tax + val)
+		# print(val, " ", self)
+		offer.setValue(val*self.tax + val if self.money >= val*self.tax else math.inf)
 		return offer
 
 	def setOffer(self, offer):
@@ -84,18 +88,24 @@ class Company:
 			if i - o.getTimestamp() > 5:
 				self.offers.remove(o)
 
+	def getCompletedOffers(self):
+		return self.completedOffers
+
 	def go(self, g, i):
-		# print(f"{self} -- {offers}")
+		# print(f"{self} -- {self.offers}")
 		self.graph = g
 		
 		for t in self.trucks:
 			t.go(g)
 		
+		
 		self.cleanOldOffers(i)
 
 		for o in self.offers:
 			success = self.chooseTruck(o)
-			self.offers.remove(o)
+			if success:
+				self.offers.remove(o)
+				self.completedOffers += 1
 		
 		# if not not self.offers:
 			# print(len(self.offers), " not empty and num free trucks ", len([t for t in self.trucks if t.getStatus() == "livre"]), "   ", self)
