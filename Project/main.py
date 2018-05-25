@@ -10,7 +10,9 @@ company_names = ["A", "B", "C", "D","E","F","G","H","I","J","K"]
 def generate_companies(graph, n_companies=5):
     # create companies
     companies = sample(list(graph.nodes()), k=n_companies)
-    companies = [(x, Company(x, 1000, company_names[i], graph)) for i,x in enumerate(companies)]
+    companies = [(x, Company(x, 1000, company_names[i], graph,
+            uni_cost=1, truck_threshold=100, profit_margin=1.5, tax=0.05
+            )) for i,x in enumerate(companies)]
     print(companies)
     graph_utils.set_company_nodes(graph, companies)
     return companies
@@ -36,7 +38,7 @@ def do_game_over(companies, company, graph,t):
 
 
 def main():
-    g = graph_utils.generate_weighted_random_graph()
+    g = graph_utils.generate_weighted_random_graph(n=15, p=0.2, min_weight=1, max_weight=10)
     # g = graph_utils.generate_weighted_barabasi_graph()
 
     companies = generate_companies(g, n_companies=5)
@@ -65,7 +67,7 @@ def main():
                 do_game_over(companies, c, g,i)
                 continue
 
-            c[1].money -= c[1].money*0.001 # impostos por existencia
+            # c[1].money -= c[1].money*0.001 # impostos por existencia
             c[1].go(g, i)
 
             # if not i % 100:

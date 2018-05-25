@@ -6,11 +6,11 @@ import numpy as np
 from random import *
 
 class Client:
-	def __init__(self, pos, companies, min_offer_val=20, max_offer_val=100):
+	def __init__(self, pos, companies, risk=random(), utilities=[], min_offer_val=20, max_offer_val=100):
 		# self.money = 5 SALARIO MINIMO???
 		self.pos = pos
-		self.risk = random()
-		self.utilities = self.calculateUtilities(companies)
+		self.risk = risk
+		self.utilities = utilities if utilities != [] else self.calculateUtilities(companies)
 		self.companies = companies
 		self.min_offer_val = min_offer_val
 		self.max_offer_val = max_offer_val
