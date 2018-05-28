@@ -105,9 +105,17 @@ class Truck:
 	def getPrice(self, item): # devolver o melhor custo se adicionar o item ao truck
 		if self.getCapacity() < item.getQuantity() or self.getStatus() == "ocupado":
 			return math.inf
+		costs = []
 		try:
-			costs = [nx.shortest_path_length(self.graph,source=self.owner.pos,target=item.getTarget())]
-			costs += [nx.shortest_path_length(self.graph,source=i.getTarget(),target=item.getTarget()) for i in self.items]
+			costs.append(self.graph[self.owner.pos][item.getTarget()]["weight"])
+			for j in self.items:
+				costs_list = [nx.shortest_path(self.graph,source=j.getTarget(),target=item.getTarget())]
+				# print(costs_list)
+				for i in range(len(costs_list)):
+					cost = 0
+					if i != len(costs_list)-1:
+						cost += self.graph[costs_list[i]][costs_list[i+1]]["weight"]
+				costs.append(cost)
 		except Exception as e:
 			return math.inf
 		# print("returning the minimum ",min(costs)," for this truck ", self)

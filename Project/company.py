@@ -5,7 +5,7 @@ import math
 from random import *
 
 class Company:
-	def __init__(self, pos, money, name, g, uni_cost=1, truck_threshold=100, profit_margin=1.5, tax=0.05):
+	def __init__(self, pos, money, name, g, uni_cost=1, truck_threshold=280, profit_margin=1.5, tax=0.05):
 		self.pos = pos
 		self.money = money
 		self.name = name
@@ -30,6 +30,7 @@ class Company:
 			return False
 		else:
 			costs = [t.getPrice(item) for t in free_trucks]
+			# print(costs)
 			minimum = min(costs)
 		return minimum
 
@@ -65,19 +66,21 @@ class Company:
 		
 	def getBid(self, offer):
 		if self.money <=0:
-			offer.setValue(math.inf)
-			return offer
+			# offer.setValue(math.inf)
+			return math.inf
 
-		offer.setValue(offer.getQuantity()*self.uniCost)
+		# offer.setValue()
 		minimum = self.getBestPrice(offer)
-		if minimum == math.inf:
-			offer.setValue(math.inf)
-			return offer
 
-		val = (offer.getValue()+minimum)*self.profit_margin
+		if minimum == math.inf:
+			# offer.setValue()
+			return math.inf
+
+		val = (offer.getQuantity()*self.uniCost+minimum)*self.profit_margin
 		# print(val, " ", self)
-		offer.setValue(val*self.tax + val if self.money >= val*self.tax else math.inf)
-		return offer
+		# offer.setValue(val*self.tax + val if self.money >= val*self.tax else math.inf)
+		# print(offer.getValue)
+		return val*self.tax + val if self.money >= val*self.tax else math.inf
 
 	def setOffer(self, offer):
 		self.offers.append(offer)
