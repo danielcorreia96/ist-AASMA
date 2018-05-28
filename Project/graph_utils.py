@@ -3,7 +3,7 @@ from random import randint
 import matplotlib.pylab as plt
 
 colormap = []
-colors = ['#8B0000','#8FBC8F','#00BFFF','#B22222','#FF69B4','#90EE90','#87CEFA', '#00FF00','#000080','#FF6347','#9ACD32']
+colors = ["blue", "green", "red", "cyan", "magenta", "orange", "#1A1A1A", "yellow"]
 
 def randColor(colormap):
     color = colors[randint(0,len(colors)-1)]

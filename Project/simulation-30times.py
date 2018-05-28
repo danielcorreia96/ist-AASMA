@@ -72,10 +72,8 @@ class Simulation(object):
 						profit_margin=self.profit_margin,
 						tax=self.tax)) for i,x in enumerate(companies)]
 		print(companies)
-		print("companies printed")
 		graph_utils.colormap = []
 		graph_utils.set_company_nodes(graph, companies)
-		print("setting nodes")
 		return companies
 
 	# def resetCompanies(self, companies):
@@ -86,9 +84,9 @@ class Simulation(object):
 			c[1].setTrucks([Truck(i, c[1], graph) for i in range(self.n_trucks)])
 
 	def calculateUtilities(self):
-		pref = np.array([(randint(1,99)/100) for _ in range(self.n_companies)])
-		return list(pref/sum(pref))
-		# return [1 for _ in range(self.n_companies)]
+		# pref = np.array([(randint(1,99)/100) for _ in range(self.n_companies)])
+		# return list(pref/sum(pref))
+		return [1/self.n_companies for _ in range(self.n_companies)]
 
 	def generate_clients(self, graph, companies):
 		i=0
@@ -116,18 +114,19 @@ class Simulation(object):
 		return company[1]
 
 	def drawPlot(self, x_data, title, xlabel, ylabel, legend):
-		plt.figure(1)
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
-		# colors = ["red", "black", "blue", "orange", "green"]
+		
 		for i in range(len(x_data)):
-			plt.plot(list(range(len(x_data[i]))), x_data[i], label="Company "+legend[i][1], color=legend[i][0])
+			error = 0.05 * np.array(x_data[i])
+			# print("Company "+legend[i][1]+" pos:"+str(legend[i][2])+" color"+legend[i][0])
+			plt.errorbar(list(range(len(x_data[i]))), x_data[i], yerr=error, label="Company "+legend[i][1]+" pos:"+str(legend[i][2]), color=legend[i][0])
 		plt.legend()
 		plt.show()
 
 	def run(self, g, companies, clients, iterations):
-		print(companies)
+		# print(companies)
 		money_per_company = []
 		dict_companies = dict([])
 		for i in range(len(companies)):
@@ -139,13 +138,7 @@ class Simulation(object):
 				m.append(0)
 
 		for i in range(iterations):
-			# for j in range(len(money_per_company)):
-			# 	money_per_company[j].append(0)
 			if len(companies) == 0:
-				print("NO MORE COMPANIES")
-				return money_per_company
-			if len(companies) == 1:
-				print(f"WINNER: {companies[0][1]} -- t={i} -- offers={companies[0][1].completedOffers}")
 				return money_per_company
 
 			if (randint(1,99)/100) < self.p_edge_explosion:
@@ -170,9 +163,8 @@ class Simulation(object):
 			print(f"SURVIVOR: {c} -- t={i} -- offers={c[1].completedOffers}")
 			self.completedOffers += c[1].getCompletedOffers()
 
-		# print(f"OFFERS COMPLETED: {self.completedOffers}")
+		print(f"OFFERS COMPLETED: {self.completedOffers}")
 		return money_per_company
-		# self.drawPlot(money_per_company, "Money vs Time", "Time", "Money")
 
 def main():
 
@@ -202,7 +194,8 @@ def main():
 		for m in money_per_company:
 			m.append(0)
 
-	for _ in range(tests):
+	for i in range(tests):
+		print(f"\n\n\nITERATION {i}\n\n\n")
 		mc = s.run(g, list(cpy_companies), list(clients), iterations)
 		for i in range(len(mc)):
 			money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
@@ -211,10 +204,11 @@ def main():
 			cli.setCompanies([c[1] for c in cpy_companies])
 
 	for mc in money_per_company:
-		mc = np.array(mc)/10
-	legend = [(graph_utils.colormap[c[0]], c[1].name) for c in companies]
+		mc = np.array(mc)/tests
+	legend = [(graph_utils.colormap[c[0]], c[1].name, c[1].pos) for c in companies]
+	print(legend)
 	s.drawPlot(money_per_company, "Money vs Time", "Time", "Money", legend)
-
+	return g
 if __name__ == '__main__':
-	main()
+	g = main()
 	
