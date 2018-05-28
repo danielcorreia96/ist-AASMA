@@ -31,6 +31,9 @@ class Client:
 	def removeCompany(self, company):
 		self.companies.remove(company)
 
+	def setCompanies(self, companies):
+		self.companies = companies
+		
 	def go(self, i):
 		offer = self.generate_offer(i);
 		if offer != None:

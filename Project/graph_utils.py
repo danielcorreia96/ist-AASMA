@@ -40,8 +40,6 @@ def set_company_nodes(graph, companies):
     for (node, c) in companies:
         cps[node] = c
     nx.set_node_attributes(graph, cps, name="company")
-
     # color companies in graph
     for n in graph.nodes:
         colormap.append(randColor(colormap)) if "company" in graph.node[n] else colormap.append("#%06x" % 0xDDDDDD)
-
