@@ -119,9 +119,9 @@ class Simulation(object):
 		plt.ylabel(ylabel)
 		
 		for i in range(len(x_data)):
-			error = 0.05 * np.array(x_data[i])
+			error = 0.2 * np.array(x_data[i])
 			if not i:
-				plt.scatter(x=y_data[i], y=x_data[i], label=legend[i][1], color="red")
+				plt.scatter(x=y_data[i], y=x_data[i], label=legend[0], color="red")
 			else:
 				plt.scatter(x=y_data[i], y=x_data[i], color="red")
 			plt.errorbar(x=y_data[i], y=x_data[i], color="red")
@@ -172,12 +172,12 @@ class Simulation(object):
 def main():
 
 	s = Simulation(
-		n_nodes=20, graph_type="random", graph_param=0.2, 
+		n_nodes=15, graph_type="random", graph_param=0.2, 
 		graph_min_weight=1, graph_max_weight=10,
-		n_companies=5, n_trucks=7, truck_threshold=200, company_init_money=2500,
+		n_companies=5, n_trucks=7, truck_threshold=100, company_init_money=2500,
 		uni_cost=1, profit_margin=1.5, tax=0.05,
 		risk=(randint(1,99)/100),
-		min_offer_val=20, max_offer_val=80,
+		min_offer_val=25, max_offer_val=80,
 		existence_tax=0.05, p_edge_explosion=0.000, p_truck_explosion=0.01)
 	
 	g = s.build_graph()
@@ -215,10 +215,12 @@ def main():
 	maximum = [i[len(i)-1] for i in money_per_company]
 	best_company_index = maximum.index(max(maximum))
 	best_company = cpy_companies[best_company_index][1]
-	all_costs = [money_per_company[best_company_index][-1]]
-	legend = [(graph_utils.colors[len(all_costs)], "Position: "+str(best_company.pos))]
+	# all_costs = [money_per_company[best_company_index][-1]]
+	legend = ["Position: "+str(best_company.pos)]
+	all_costs = []
 
-	for threshold in range(125,325,25):
+	limits = list(range(0,325,25))
+	for threshold in limits:
 
 		for _ in range(iterations):
 			for m in range(len(money_per_company)):
@@ -242,7 +244,7 @@ def main():
 	
 		all_costs += [money_per_company[best_company_index][-1]]
 			
-	s.drawPlot(list(range(100,325,25)), all_costs, "Money vs Time", "Time", "Money", legend)
+	s.drawPlot(limits, all_costs, "Threshold", "Threshold", "Money", legend)
 	return g
 if __name__ == '__main__':
 	g = main()

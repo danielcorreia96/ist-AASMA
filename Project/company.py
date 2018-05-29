@@ -52,7 +52,7 @@ class Company:
 	def updateTrucks(self):
 		free_trucks = [t for t in self.trucks if t.getStatus() == "livre"]
 		for t in free_trucks:
-			if t.getCapacity() <= self.truck_threshold: # muito baixo trucks não vão distribuir
+			if t.getCapacity() < self.truck_threshold: # muito baixo trucks não vão distribuir
 				t.setStatus("ocupado")
 
 	def receiveMoney(self, value, truck):
@@ -66,20 +66,15 @@ class Company:
 		
 	def getBid(self, offer):
 		if self.money <=0:
-			# offer.setValue(math.inf)
 			return math.inf
 
-		# offer.setValue()
 		minimum = self.getBestPrice(offer)
 
-		if minimum == math.inf:
-			# offer.setValue()
+		if minimum is False or minimum == math.inf:
 			return math.inf
 
 		val = (offer.getQuantity()*self.uniCost+minimum)*self.profit_margin
-		# print(val, " ", self)
-		# offer.setValue(val*self.tax + val if self.money >= val*self.tax else math.inf)
-		# print(offer.getValue)
+	
 		return val*self.tax + val if self.money >= val*self.tax else math.inf
 
 	def setOffer(self, offer):
@@ -108,7 +103,7 @@ class Company:
 			t.go(g)
 		
 		
-		self.cleanOldOffers(i)
+		# self.cleanOldOffers(i)
 
 		for o in self.offers:
 			success = self.chooseTruck(o)

@@ -169,12 +169,12 @@ class Simulation(object):
 def main():
 
 	s = Simulation(
-		n_nodes=20, graph_type="random", graph_param=0.2, 
+		n_nodes=15, graph_type="random", graph_param=0.2, 
 		graph_min_weight=1, graph_max_weight=10,
 		n_companies=5, n_trucks=7, truck_threshold=100, company_init_money=2500,
 		uni_cost=1, profit_margin=1.5, tax=0.05,
 		risk=(randint(1,99)/100),
-		min_offer_val=20, max_offer_val=80,
+		min_offer_val=25, max_offer_val=80,
 		existence_tax=0.05, p_edge_explosion=0.000, p_truck_explosion=0.01)
 	
 	g = s.build_graph()
