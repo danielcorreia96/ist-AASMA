@@ -86,6 +86,12 @@ class Company:
 		self.offers.append(offer)
 		self.money -= self.tax*offer.getValue()
 
+	def setUniCost(self, uniCost):
+		self.uniCost = uniCost
+	
+	def setTruckThreshold(self, threshold):
+		self.truck_threshold = threshold
+
 	def cleanOldOffers(self, i):
 		for o in self.offers:
 			if i - o.getTimestamp() > 5:
