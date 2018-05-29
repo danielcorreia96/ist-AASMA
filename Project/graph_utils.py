@@ -3,7 +3,7 @@ from random import randint
 import matplotlib.pylab as plt
 
 colormap = []
-colors = ["blue", "green", "red", "cyan", "magenta", "orange", "#1A1A1A", "yellow"]
+colors = ["blue", "green", "red", "cyan", "magenta", "orange", "grey", "yellow", "black", "darkblue", "brown"]
 
 def randColor(colormap):
     color = colors[randint(0,len(colors)-1)]
@@ -33,6 +33,16 @@ def generate_weighted_barabasi_graph(n=20, m=3, min_weight=1, max_weight=10):
     for (u,v,w) in g.edges(data=True):
         w['weight'] = randint(min_weight, max_weight)
     return g
+
+def set_ncompany_nodes(graph, companies):
+    # set companies to specific nodes
+    cps = dict()
+    for (node, c) in companies:
+        cps[node] = c
+    nx.set_node_attributes(graph, cps, name="company")
+    # color companies in graph
+    # for n in graph.nodes:
+    #     colormap.append(randColor(colormap)) if "company" in graph.node[n] else colormap.append("#%06x" % 0xDDDDDD)
 
 def set_company_nodes(graph, companies):
     # set companies to specific nodes

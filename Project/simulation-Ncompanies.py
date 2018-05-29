@@ -72,8 +72,8 @@ class Simulation(object):
 						profit_margin=self.profit_margin,
 						tax=self.tax)) for i,x in enumerate(companies)]
 		print(companies)
-		graph_utils.colormap = []
-		graph_utils.set_company_nodes(graph, companies)
+		# graph_utils.colormap = []
+		graph_utils.set_ncompany_nodes(graph, companies)
 		return companies
 
 	# def resetCompanies(self, companies):
@@ -107,27 +107,31 @@ class Simulation(object):
 		print(f"\tedge removed:\t {e[0]} -- {e[1]} (t={t})")
 
 	def do_game_over(self, companies, company, graph,t):
-		print(f"GAME OVER FOR {company[1]} at t={t} -- offers={company[1].completedOffers}")
+		# print(f"GAME OVER FOR {company[1]} at t={t} -- offers={company[1].completedOffers}")
 		companies.remove(company)
 		# del graph.node[company[0]]['company']
 		# graph_utils.colormap[company[0]]= "#%06x" % 0xDDDDDD
 		return company[1]
 
-	def drawPlot(self, x_data, title, xlabel, ylabel, legend):
+	def drawPlot(self, y_data, x_data, title, xlabel, ylabel, legend):
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 		
 		for i in range(len(x_data)):
 			error = 0.05 * np.array(x_data[i])
-			# print("Company "+legend[i][1]+" pos:"+str(legend[i][2])+" color"+legend[i][0])
-			plt.errorbar(list(range(len(x_data[i]))), x_data[i], yerr=error, label="Company "+legend[i][1]+" pos:"+str(legend[i][2]), color=legend[i][0])
+			if not i:
+				plt.scatter(y_data[i], x_data[i], label=legend[0], color="red")
+			else:
+				plt.scatter(y_data[i], x_data[i], color="red")
+			plt.errorbar(y_data[i], x_data[i], yerr=error, color="red")
 		plt.legend()
 		plt.show()
 
 	def run(self, g, companies, clients, iterations):
 		# print(companies)
 		money_per_company = []
+		self.completedOffers = 0
 		dict_companies = dict([])
 		for i in range(len(companies)):
 			money_per_company.append([])
@@ -169,45 +173,57 @@ class Simulation(object):
 def main():
 
 	s = Simulation(
-		n_nodes=20, graph_type="random", graph_param=0.2, 
+		n_nodes=30, graph_type="random", graph_param=0.2, 
 		graph_min_weight=1, graph_max_weight=10,
 		n_companies=5, n_trucks=7, truck_threshold=100, company_init_money=2500,
 		uni_cost=1, profit_margin=1.5, tax=0.05,
 		risk=(randint(1,99)/100),
-		min_offer_val=20, max_offer_val=80,
+		min_offer_val=25, max_offer_val=80,
 		existence_tax=0.05, p_edge_explosion=0.000, p_truck_explosion=0.01)
 	
 	g = s.build_graph()
-	companies = s.generate_companies(g)
-	s.generate_trucks(g, companies)
-	graph_utils.draw_graph(g)
-	graph_utils.show_graphs()
-	cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-	clients = s.generate_clients(g, cpy_companies)
 	money_per_company = []
+	all_costs = []
 	iterations = 100
 	tests = 30
-	for _ in range(s.n_companies):
-		money_per_company.append([])
-	
-	for _ in range(iterations):
-		for m in money_per_company:
-			m.append(0)
-
-	for i in range(tests):
-		print(f"\n\n\nITERATION {i}\n\n\n")
-		mc = s.run(g, list(cpy_companies), list(clients), iterations)
-		for i in range(len(mc)):
-			money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
+	list_len_companies = list(range(1,11))
+	for n_companies in list_len_companies:
+		s.n_companies = n_companies
+		money_per_company = []
+		companies = s.generate_companies(g)
+		s.generate_trucks(g, companies)
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-		for cli in clients:
-			cli.setCompanies([c[1] for c in cpy_companies])
+		clients = s.generate_clients(g, cpy_companies)
+		# graph_utils.draw_graph(g)
+		# graph_utils.show_graphs()
+		for _ in range(s.n_companies):
+			money_per_company.append([])
+		
+		for _ in range(iterations):
+			for m in money_per_company:
+				m.append(0)
 
-	for mc in money_per_company:
-		mc = np.array(mc)/tests
-	legend = [(graph_utils.colormap[c[0]], c[1].name, c[1].pos) for c in companies]
-	print(legend)
-	s.drawPlot(money_per_company, "Money vs Time", "Time", "Money", legend)
+		for i in range(tests):
+			print(f"\n\n\nITERATION {i}\n\n\n")
+			mc = s.run(g, list(cpy_companies), list(clients), iterations)
+			for i in range(len(mc)):
+				money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
+			cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
+			for cli in clients:
+				cli.setCompanies([c[1] for c in cpy_companies])
+
+		for c in companies:
+			del g.node[c[0]]['company']
+
+		for mc in money_per_company:
+			mc = np.array(mc)/tests
+		
+		maximum = [i[-1] for i in money_per_company]
+		all_costs += [max(maximum)]
+
+	legend = ["Company w/ most profit"]
+	s.drawPlot(list_len_companies, all_costs, "Number of Companies", "Number of Companies", "Money", legend)
+
 	return g
 if __name__ == '__main__':
 	g = main()
