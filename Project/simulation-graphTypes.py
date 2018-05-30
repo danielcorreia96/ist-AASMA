@@ -58,7 +58,7 @@ class Simulation(object):
 		elif self.graph_type == "scale-free":
 			return graph_utils.generate_weighted_barabasi_graph(
 				n=self.n_nodes, 
-				p=self.graph_param,
+				m=self.graph_param,
 				min_weight=self.graph_min_weight, 
 				max_weight=self.graph_max_weight)
 
@@ -95,7 +95,7 @@ class Simulation(object):
 					risk=self.risk,
 					utilities=self.calculateUtilities(),
 					min_offer_val=self.min_offer_val, 
-					max_offer_val=self.max_offer_val) for n in graph.nodes if "company" not in graph.node[n]]
+					max_offer_val=self.max_offer_val) for n in graph.nodes if "company" not in graph.node[n]]# and random() > 0.5]
 
 	def do_edge_explosion(self, t,graph):
 		try:
@@ -113,23 +113,18 @@ class Simulation(object):
 		# graph_utils.colormap[company[0]]= "#%06x" % 0xDDDDDD
 		return company[1]
 
-	def drawPlot(self, y_data, x_data, title, xlabel, ylabel, legend):
+	def drawPlot(self, y_data, random_type, scale_free_type, title, xlabel, ylabel, legend):
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
-		
-		for i in range(len(x_data)):
-			error = 0.05 * np.array(x_data[i])
-			if not i:
-				plt.scatter(y_data[i], x_data[i], label=legend[0], color="red")
-			else:
-				plt.scatter(y_data[i], x_data[i], color="red")
-			plt.errorbar(y_data[i], x_data[i], yerr=error, color="red")
+		error_random = 0.05 * np.array(random_type)
+		error_scale_free = 0.05 * np.array(scale_free_type)
+		plt.errorbar(y_data, random_type, yerr=error_random, label=legend[0], color="red")
+		plt.errorbar(y_data, scale_free_type, yerr=error_scale_free, label=legend[1], color="blue")
 		plt.legend()
 		plt.show()
 
 	def run(self, g, companies, clients, iterations):
-		# print(companies)
 		money_per_company = []
 		self.completedOffers = 0
 		dict_companies = dict([])
@@ -173,7 +168,7 @@ class Simulation(object):
 def main():
 
 	s = Simulation(
-		n_nodes=30, graph_type="random", graph_param=0.2, 
+		n_nodes=15, graph_type="random", graph_param=0.2, 
 		graph_min_weight=1, graph_max_weight=10,
 		n_companies=5, n_trucks=7, truck_threshold=100, company_init_money=2500,
 		uni_cost=1, profit_margin=1.5, tax=0.05,
@@ -181,21 +176,20 @@ def main():
 		min_offer_val=25, max_offer_val=80,
 		existence_tax=0.05, p_edge_explosion=0.000, p_truck_explosion=0.01)
 	
-	g = s.build_graph()
-	money_per_company = []
-	all_costs = []
+	
 	iterations = 100
 	tests = 30
-	list_len_companies = list(range(1,11))
-	for n_companies in list_len_companies:
-		s.n_companies = n_companies
+	all_costs = []
+	for tipo in range(2):
+		if tipo==1:
+			s.graph_type = "scale-free"
+			s.graph_param = 2
+		g = s.build_graph()
 		money_per_company = []
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
-		# graph_utils.draw_graph(g)
-		# graph_utils.show_graphs()
 		for _ in range(s.n_companies):
 			money_per_company.append([])
 		
@@ -212,18 +206,16 @@ def main():
 			for cli in clients:
 				cli.setCompanies([c[1] for c in cpy_companies])
 
-		for c in companies:
-			del g.node[c[0]]['company']
-
 		for mc in money_per_company:
 			mc = np.array(mc)/tests
 		
 		maximum = [i[-1] for i in money_per_company]
-		all_costs += [max(maximum)]
-
-	legend = ["Company w/ most profit"]
-	s.drawPlot(list_len_companies, all_costs, "Number of Companies", "Number of Companies", "Money", legend)
+		all_costs += [money_per_company[maximum.index(max(maximum))]]
+	
+	legend = ["Random Network", "Scale-Free Network"]
+	s.drawPlot(list(range(iterations)), all_costs[0], all_costs[1], "Graph Types", "Time", "Money", legend)
 
 	return g
 if __name__ == '__main__':
 	g = main()
+	
