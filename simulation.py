@@ -412,203 +412,210 @@ class ProfitMargin(SimulationObject):
 		legend = [["Company w/ worst profit"]]
 		s.drawPlot(profitMaring_values, values_pm_company, "Profit Margin", "Profit Margin", "Money", legend, per=0.05)
 
-def clearWindow():
-	print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-	print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+class Menu(object):		
+	def clearWindow(self):
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
-def levelVerbosity():
-	if verbosity and verbosity_events and verbosity_companies:
-		return 4
-	elif verbosity and verbosity_companies:
-		return 3
-	elif verbosity and verbosity_events:
-		return 2
-	elif verbosity:
-		return 1
-	else:
-		return 5
-
-def changeVerbosity():
-	global verbosity, verbosity_events, verbosity_companies, simulating
-	while(True):
-		clearWindow()
-		print(f"\nCurrent level of verbosity: {levelVerbosity()}")
-		print("\nType number to choose verbosity level:")
-		print("1 - Only number of iterations")
-		print("2 - Iterations and Events (Explosions)")
-		print("3 - Iterations and Companies' Failures and Winnings")
-		print("4 - All above")
-		print("5 - None")
-		print("0 - Terminate\n")
-		try:
-			verbosity_level = int(input("Option:  "))
-		except Exception as e:
-			print("\nPlease enter a valid integer\n")
-			continue
-		if verbosity_level == 1:
-			verbosity = True
-			return
-		elif verbosity_level == 2:
-			verbosity = True
-			verbosity_events = True
-			return
-		elif verbosity_level == 3:
-			verbosity = True
-			verbosity_companies = True
-			return
-		elif verbosity_level == 4:
-			verbosity = True
-			verbosity_events = True
-			verbosity_companies = True
-			return
-		elif verbosity_level == 5:
-			verbosity = False
-			verbosity_level = False
-			verbosity_companies = False
-			return
-		elif verbosity_level == 0:
-			simulating = False
-			return
+	def levelVerbosity(self):
+		if verbosity and verbosity_events and verbosity_companies:
+			return 4
+		elif verbosity and verbosity_companies:
+			return 3
+		elif verbosity and verbosity_events:
+			return 2
+		elif verbosity:
+			return 1
 		else:
-			print(f"\n{option} is not a valid verbosity level\n")
-			continue
+			return 5
 
-def changeGraphType():
-	global graphType
-	graphType = "scale-free" if graphType == "random" else "random"
+	def changeVerbosity(self):
+		global verbosity, verbosity_events, verbosity_companies, simulating
+		while(True):
+			print(f"\nCurrent level of verbosity: {self.levelVerbosity()}")
+			print("\nType number to choose verbosity level:")
+			print("1 - Only number of iterations")
+			print("2 - Iterations and Events (Explosions)")
+			print("3 - Iterations and Companies' Failures and Winnings")
+			print("4 - All above")
+			print("5 - None")
+			print("0 - Terminate\n")
+			try:
+				verbosity_level = int(input("Option:  "))
+			except Exception as e:
+				self.clearWindow()
+				print("\nPlease enter a valid integer\n")
+				continue
+			if verbosity_level == 1:
+				verbosity = True
+				return
+			elif verbosity_level == 2:
+				verbosity = True
+				verbosity_events = True
+				return
+			elif verbosity_level == 3:
+				verbosity = True
+				verbosity_companies = True
+				return
+			elif verbosity_level == 4:
+				verbosity = True
+				verbosity_events = True
+				verbosity_companies = True
+				return
+			elif verbosity_level == 5:
+				verbosity = False
+				verbosity_level = False
+				verbosity_companies = False
+				return
+			elif verbosity_level == 0:
+				simulating = False
+				return
+			else:
+				self.clearWindow()
+				print(f"\n{verbosity_level} is not a valid verbosity level\n")
+				continue
 
-def changeIterations():
-	global iterations
-	while True:
-		try:
-			print(f"\nCurrent number of iterations per test: {iterations}")
-			iters = int(input("New number:  "))
-			iterations = iters if iters > 0 else tests
-			return
-		except Exception as e:
-			print("\nPlease enter a valid integer\n")
+	def changeGraphType(self):
+		global graphType
+		graphType = "scale-free" if graphType == "random" else "random"
 
-def changeTests():
-	global tests
-	while True:
-		try:
-			print(f"\nCurrent number of tests per simulation: {tests}")
-			num_tests = int(input("New number:  "))
-			tests = num_tests if num_tests > 0 else tests
-			return
-		except Exception as e:
-			print("\nPlease enter a valid integer\n")
+	def changeIterations(self):
+		global iterations
+		while True:
+			try:
+				print(f"\nCurrent number of iterations per test: {iterations}")
+				iters = int(input("New number:  "))
+				iterations = iters if iters > 0 else tests
+				return
+			except Exception as e:
+				print("\nPlease enter a valid integer\n")
 
-def defaultValues():
-	global graphType, tests, iterations, verbosity, verbosity_events, verbosity_companies
-	graphType = "random"
-	tests = 30
-	iterations = 100
-	verbosity = False
-	verbosity_events = False 
-	verbosity_companies = False
+	def changeTests(self):
+		global tests
+		while True:
+			try:
+				print(f"\nCurrent number of tests per simulation: {tests}")
+				num_tests = int(input("New number:  "))
+				tests = num_tests if num_tests > 0 else tests
+				return
+			except Exception as e:
+				print("\nPlease enter a valid integer\n")
 
-def options():
-	global simulating
-	while True:
-		clearWindow()
-		print("\nType number to choose option:")
-		print("1 - Choose verbosity")
-		print("2 - Change type of the graph (Random or Scale Free)")
-		print("3 - Change number of iterations per test")
-		print("4 - Change number of tests per simulation")
-		print("5 - Restore default values")
-		print("6 - None")
-		print("0 - Terminate\n")
-		try:
-			option = int(input("Option:  "))
-		except Exception as e:
-			print("\nPlease enter a valid integer\n")
-			continue
-		if option == 1:
-			changeVerbosity()
-			return
-		elif option == 2:
-			changeGraphType()
-			return
-		elif option == 3:
-			changeIterations()
-			return
-		elif option == 4:
-			changeTests()
-			return
-		elif option == 5:
-			defaultValues()
-			return
-		elif option == 6:
-			return
-		elif option == 0:
-			simulating = False
-			return
-		else:
-			print(f"\n{option} in not a valid option...\n")
-			continue
+	def defaultValues(self):
+		global graphType, tests, iterations, verbosity, verbosity_events, verbosity_companies
+		graphType = "random"
+		tests = 30
+		iterations = 100
+		verbosity = False
+		verbosity_events = False 
+		verbosity_companies = False
 
-def __main__():
-	global simulating
-	while simulating:
-		print(f"\nCurrent graph type: {graphType}")
-		print("\nType number to choose simulation:")
-		print("1 - Money through time")
-		print("2 - Varying the Graph's Type (Random and Scale-free)")
-		print("3 - Varying the Number of Companies")
-		print("4 - Varying the Number of Nodes w/ Number of trucks 8 and 16 (takes a lot of time)")
-		print("5 - Varying the Trucks' Threshold")
-		print("6 - Varying the Percentage of Trucks' Explosion")
-		print("7 - Varying the Percentage of Edges' Explosion")
-		print("8 - Varying the Most Profit Company's Profit Margin")
-		# print("9 - Varying the clients' preferences for the Company with less money")
-		print("-1 - Options")
-		
-		print("0 - Terminate\n")
-		try:
-			simulation = int(input("Option:  "))
-		except Exception as e:
-			clearWindow()
-			print("\nPlease enter a valid integer\n")
-			continue
-		
-		graph_utils.colormap = []
-		if simulation == 0:
-			simulating = False
-		elif simulation == -1:
-			options()
-		elif simulation == 1:
-			moneyTime = MoneyTime(graphType)
-			moneyTime.run()
-		elif simulation == 2:
-			graphTypes = GraphTypes(graphType)
-			graphTypes.run()
-		elif simulation == 3:
-			numCompanies = NumCompanies(graphType)
-			numCompanies.run()
-		elif simulation == 4:
-			numNodes = NumNodes(graphType)
-			numNodes.run()
-		elif simulation == 5:
-			threshold = Threshold(graphType)
-			threshold.run()
-		elif simulation == 6:
-			truckExplosion = TruckExplosion(graphType)
-			truckExplosion.run()
-		elif simulation == 7:
-			edgeExplosion = EdgeExplosion(graphType)
-			edgeExplosion.run()
-		elif simulation == 8:
-			profitMargin = ProfitMargin(graphType)
-			profitMargin.run()
-		# elif simulation == 9:
-		# 	preferences = Preferences()
-		# 	preferences.run()
-		else:
-			print(f"\n{simulation} is not a valid simulation...\n")
-			continue
-		clearWindow()
+	def options(self):
+		global simulating
+		while True:
+			print("\nType number to choose option:")
+			print("1 - Choose verbosity")
+			print("2 - Change type of the graph (Random or Scale Free)")
+			print("3 - Change number of iterations per test")
+			print("4 - Change number of tests per simulation")
+			print("5 - Restore default values")
+			print("6 - None")
+			print("0 - Terminate\n")
+			try:
+				option = int(input("Option:  "))
+			except Exception as e:
+				self.clearWindow()
+				print("\nPlease enter a valid integer\n")
+				continue
+			if option == 1:
+				self.clearWindow()
+				self.changeVerbosity()
+				return
+			elif option == 2:
+				self.changeGraphType()
+				return
+			elif option == 3:
+				self.changeIterations()
+				return
+			elif option == 4:
+				self.changeTests()
+				return
+			elif option == 5:
+				self.defaultValues()
+				return
+			elif option == 6:
+				return
+			elif option == 0:
+				simulating = False
+				return
+			else:
+				self.clearWindow()
+				print(f"\n{option} in not a valid option...\n")
+				continue
+
+	def start(self):
+		global simulating
+		self.clearWindow()
+		while simulating:
+			print(f"\nCurrent graph type: {graphType}")
+			print("\nType number to choose simulation:")
+			print("1 - Money through time")
+			print("2 - Varying the Graph's Type (Random and Scale-free)")
+			print("3 - Varying the Number of Companies")
+			print("4 - Varying the Number of Nodes w/ Number of trucks 8 and 16 (takes a lot of time)")
+			print("5 - Varying the Trucks' Threshold")
+			print("6 - Varying the Percentage of Trucks' Explosion")
+			print("7 - Varying the Percentage of Edges' Explosion")
+			print("8 - Varying the Most Profit Company's Profit Margin")
+			# print("9 - Varying the clients' preferences for the Company with less money")
+			print("-1 - Options")
+			
+			print("0 - Terminate\n")
+			try:
+				simulation = int(input("Option:  "))
+			except Exception as e:
+				self.clearWindow()
+				print("\nPlease enter a valid integer\n")
+				continue
+			
+			graph_utils.colormap = []
+			if simulation == 0:
+				simulating = False
+			elif simulation == -1:
+				self.clearWindow()
+				self.options()
+			elif simulation == 1:
+				moneyTime = MoneyTime(graphType)
+				moneyTime.run()
+			elif simulation == 2:
+				graphTypes = GraphTypes(graphType)
+				graphTypes.run()
+			elif simulation == 3:
+				numCompanies = NumCompanies(graphType)
+				numCompanies.run()
+			elif simulation == 4:
+				numNodes = NumNodes(graphType)
+				numNodes.run()
+			elif simulation == 5:
+				threshold = Threshold(graphType)
+				threshold.run()
+			elif simulation == 6:
+				truckExplosion = TruckExplosion(graphType)
+				truckExplosion.run()
+			elif simulation == 7:
+				edgeExplosion = EdgeExplosion(graphType)
+				edgeExplosion.run()
+			elif simulation == 8:
+				profitMargin = ProfitMargin(graphType)
+				profitMargin.run()
+			# elif simulation == 9:
+			# 	preferences = Preferences()
+			# 	preferences.run()
+			else:
+				self.clearWindow()
+				print(f"\n{simulation} is not a valid simulation...\n")
+				continue
+			self.clearWindow()
 	
 # initial type of the graphs
 graphType = "random"
@@ -623,6 +630,7 @@ verbosity_companies = False
 # simulation flag
 simulating = True
 
-__main__()
+menu = Menu()
+menu.start()
 
 
