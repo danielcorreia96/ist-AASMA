@@ -87,11 +87,9 @@ class Company:
 	def setTruckThreshold(self, threshold):
 		self.truck_threshold = threshold
 
-	def cleanOldOffers(self, i):
-		for o in self.offers:
-			if i - o.getTimestamp() > 5:
-				self.offers.remove(o)
-
+	def setProfitMargin(self, pm):
+		self.profit_margin = pm
+	
 	def getCompletedOffers(self):
 		return self.completedOffers
 
@@ -101,18 +99,12 @@ class Company:
 		
 		for t in self.trucks:
 			t.go(g)
-		
-		
-		# self.cleanOldOffers(i)
 
 		for o in self.offers:
 			success = self.chooseTruck(o)
 			if success:
 				self.offers.remove(o)
 				self.completedOffers += 1
-		
-		# if not not self.offers:
-			# print(len(self.offers), " not empty and num free trucks ", len([t for t in self.trucks if t.getStatus() == "livre"]), "   ", self)
 
 		self.updateTrucks()
 

@@ -47,10 +47,10 @@ clients = [Client(n, [c[1] for c in companies], min_offer_val=20, max_offer_val=
 
 # graph_utils.draw_graph(g)
 
-p_remove = 0.0002 # por random
+p_remove = 0.02 # por random
 graph_utils.draw_graph(g)
 graph_utils.show_graphs()
-for i in range(100):
+for i in range(10000):
     if not len(companies):
         print("NO MORE COMPANIES")
         break

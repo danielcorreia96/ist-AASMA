@@ -209,6 +209,11 @@ class Simulation(object):
 		return money_per_company
 
 class MoneyTime(object):
+	def __init__(self, type="random"):
+		self.type = type
+		self.graph_param = 0.2 if self.type=="random" else 2
+
+
 	def drawPlot(self, x_data, title, xlabel, ylabel, legend):
 		plt.title(title)
 		plt.xlabel(xlabel)
@@ -220,7 +225,7 @@ class MoneyTime(object):
 		plt.show()
 
 	def run(self):
-		s = Simulation()	
+		s = Simulation(graph_type=self.type, graph_param=self.graph_param)	
 		g = s.build_graph()
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
@@ -326,23 +331,23 @@ class Threshold(object):
 	def run(self):
 		s = Simulation()
 		g = s.build_graph()
+		companies = s.generate_companies(g)
+		s.generate_trucks(g, companies)
+		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
+		clients = s.generate_clients(g, cpy_companies)
 		values_per_threshold = []	
 		limits = list(range(0,325,25))		
 		for threshold in limits:
 			s.truck_threshold = threshold
 			graph_utils.colormap = []
-			companies = s.generate_companies(g)
-			s.generate_trucks(g, companies)
-			cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-			clients = s.generate_clients(g, cpy_companies)
+			for c in companies:
+				c[1].setTruckThreshold(threshold)
 			money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
 			maximum = [i[-1] for i in money_per_company]
 			values_per_threshold.append(money_per_company[maximum.index(max(maximum))][-1])
 			gc.collect()
-			for c in companies:
-				del g.node[c[0]]['company']
 		legend = [["Company w/ most profit"]]
-		s.drawPlot(limits, values_per_threshold, "Threshold", "Threshold", "Money", legend)
+		s.drawPlot(limits, values_per_threshold, "Threshold", "Threshold", "Money", legend, per=0.05)
 
 class Explosion(object):
 	def __init__(self, edge=False):
@@ -383,6 +388,64 @@ class EdgeExplosion(Explosion):
 	def __init__(self):
 		super().__init__(edge=True)
 
+# class ProfitMargin(object):
+# 	def run(self):
+# 		s = Simulation()
+# 		g = s.build_graph()
+# 		companies = s.generate_companies(g)
+# 		s.generate_trucks(g, companies)
+# 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
+# 		clients = s.generate_clients(g, cpy_companies)
+# 		money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
+# 		minimum = [m[-1] for m in money_per_company]
+# 		index_company = minimum.index(min(minimum))
+# 		values_ = []
+# 		profitMaring_values = list(np.array(list(range(10,30,1)))/10)		
+# 		for pm in profitMaring_values:
+# 			companies[index_company][1].setProfitMargin(pm)
+# 			graph_utils.colormap = []
+# 			money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
+# 			values_.append(money_per_company[index_company][-1])
+# 			gc.collect()
+# 		legend = [["Company w/ worst profit"]]
+# 		s.drawPlot(profitMaring_values, values_, "Profit Margin", "Profit Margin", "Money", legend, per=0.05)
+
+def changeVerbosity():
+	global verbosity, verbosity_events, verbosity_companies, simulating
+	while(True):
+		print("\nType number to choose verbosity level:")
+		print("1 - Only number of iterations")
+		print("2 - Iterations and Events (Explosions)")
+		print("3 - Iterations and Companies' Failures and Winnings")
+		print("4 - All above")
+		print("5 - None above")
+		print("0 - Terminate\n")
+		try:
+			verbosity_level = int(input("Option:  "))
+		except Exception as e:
+			print("\nPlease enter a valid integer\n")
+			continue
+		if verbosity_level == 1:
+			verbosity = True
+			return
+		elif verbosity_level == 2:
+			verbosity = True
+			verbosity_events = True
+			return
+		elif verbosity_level == 3:
+			verbosity = True
+			verbosity_companies = True
+			return
+		elif verbosity_level == 4:
+			verbosity = True
+			verbosity_events = True
+			verbosity_companies = True
+			return
+		elif verbosity_level == 5:
+			return
+		elif verbosity_level == 0:
+			simulating = False
+			return
 
 iterations = 100
 tests = 30
@@ -394,13 +457,16 @@ if __name__ == '__main__':
 	simulating = True
 	while simulating:
 		print("\nType number to choose simulation:")
-		print("1 - Money through time")
-		print("2 - Varying the Graph's Type (Random and Scale-free)")
-		print("3 - Varying the Number of Companies")
-		print("4 - Varying the Number of Nodes w/ Number of trucks 8 and 16 (takes a lot of time)")
-		print("5 - Varying the Trucks' Threshold")
-		print("6 - Varying the Percentage of Trucks' Explosion")
-		print("7 - Varying the Percentage of Edges' Explosion")
+		print("1 - Money through time - Random Graph")
+		print("2 - Money through time - Scale-Free Graph")
+		print("3 - Varying the Graph's Type (Random and Scale-free)")
+		print("4 - Varying the Number of Companies")
+		print("5 - Varying the Number of Nodes w/ Number of trucks 8 and 16 (takes a lot of time)")
+		print("6 - Varying the Trucks' Threshold")
+		print("7 - Varying the Percentage of Trucks' Explosion")
+		print("8 - Varying the Percentage of Edges' Explosion")
+		# print("9 - Varying the Most Profit Company's Profit Margin")
+		# print("10 - Varying the clients' preferences for the Company with less money")
 		print("-1 - Change Verbosity")
 		print("0 - Terminate\n")
 		try:
@@ -410,64 +476,40 @@ if __name__ == '__main__':
 			continue
 		
 		graph_utils.colormap = []
-		if not simulation:
+		if simulation == 0:
 			simulating = False
 		elif simulation == -1:
-			while(True):
-				print("\nType number to choose verbosity level:")
-				print("1 - Only number of iterations")
-				print("2 - Iterations and Events (Explosions)")
-				print("3 - Iterations and Companies' Failures and Winnings")
-				print("4 - All above")
-				print("5 - None above")
-				print("0 - Terminate\n")
-				try:
-					verbosity_level = int(input("Option:  "))
-				except Exception as e:
-					print("\nPlease enter a valid integer\n")
-					continue
-				if verbosity_level == 1:
-					verbosity = True
-					break
-				elif verbosity_level == 2:
-					verbosity = True
-					verbosity_events = True
-					break
-				elif verbosity_level == 3:
-					verbosity = True
-					verbosity_companies = True
-					break
-				elif verbosity_level == 4:
-					verbosity = True
-					verbosity_events = True
-					verbosity_companies = True
-					break
-				elif verbosity_level == 5:
-					break
-				elif not verbosity_level:
-					simulating = False
-					break
+			changeVerbosity()
 		elif simulation == 1:
 			moneyTime = MoneyTime()
 			moneyTime.run()
 		elif simulation == 2:
+			moneyTime = MoneyTime(type="scale-free")
+			moneyTime.run()
+		elif simulation == 3:
 			graphTypes = GraphTypes()
 			graphTypes.run()
-		elif simulation == 3:
+		elif simulation == 4:
 			numCompanies = NumCompanies()
 			numCompanies.run()
-		elif simulation == 4:
+		elif simulation == 5:
 			numNodes = NumNodes()
 			numNodes.run()
-		elif simulation == 5:
+		elif simulation == 6:
 			threshold = Threshold()
 			threshold.run()
-		elif simulation == 6:
+		elif simulation == 7:
 			truckExplosion = TruckExplosion()
 			truckExplosion.run()
-		elif simulation == 7:
+		elif simulation == 8:
 			edgeExplosion = EdgeExplosion()
 			edgeExplosion.run()
+		# elif simulation == 9:
+		# 	profitMargin = ProfitMargin()
+		# 	profitMargin.run()
+		# elif simulation == 10:
+		# 	preferences = Preferences()
+		# 	preferences.run()
 		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
 
