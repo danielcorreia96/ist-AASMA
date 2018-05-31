@@ -100,21 +100,26 @@ class Simulation(object):
 			e = choice(list(graph.edges()))
 			graph.remove_edge(e[0],e[1])
 		except Exception as e:
-			print(f"\tall edges removed t= {t}\t")
+			if verbosity_events:
+				print(f"\tall edges removed t= {t}\t")
 			return
-		print(f"\tedge removed:\t {e[0]} -- {e[1]} (t={t})")
+		if verbosity_events:	
+			print(f"\tedge removed:\t {e[0]} -- {e[1]} (t={t})")
 
 	def do_truck_explosion(self, t, graph, companies):
 		try:
 			c = choice(companies)
 			c[1].truckExplosion()
 		except Exception as e:
-			print(f"\tNo more trucks t= {t}\t")
+			if verbosity_events:
+				print(f"\tNo more trucks t= {t}\t")
 			return
-		print(f"\tTruck from \t {c[1].pos} exploded (t={t})")
+		if verbosity_events:	
+			print(f"\tTruck from \t {c[1].pos} exploded (t={t})")
 
 	def do_game_over(self, companies, company, graph,t):
-		# print(f"GAME OVER FOR {company[1]} at t={t} -- offers={company[1].completedOffers}")
+		if verbosity_companies:
+			print(f"GAME OVER FOR {company[1]} at t={t} -- offers={company[1].completedOffers}")
 		companies.remove(company)
 		# del graph.node[company[0]]['company']
 		# graph_utils.colormap[company[0]]= "#%06x" % 0xDDDDDD
@@ -143,7 +148,8 @@ class Simulation(object):
 		for cli in clients:
 				cli.setCompanies([c[1] for c in cpy_companies])
 		for i in range(tests):
-			print(f"\n\n\nITERATION {i}\n\n\n")
+			if verbosity:
+				print(f"\n\n\nITERATION {i}\n\n\n")
 			mc = self.run(g.copy(), list(cpy_companies), list(clients), iterations)
 			for i in range(len(mc)):
 				money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
@@ -194,10 +200,12 @@ class Simulation(object):
 				money_per_company[dict_companies[c[1]]][i] = c[1].money
 
 		for c in companies:
-			# print(f"SURVIVOR: {c} -- t={i} -- offers={c[1].completedOffers}")
+			if verbosity_companies:
+				print(f"SURVIVOR: {c} -- t={i} -- offers={c[1].completedOffers}")
 			self.completedOffers += c[1].getCompletedOffers()
 
-		# print(f"OFFERS COMPLETED: {self.completedOffers}")
+		if verbosity_companies:
+			print(f"OFFERS COMPLETED: {self.completedOffers}")
 		return money_per_company
 
 class MoneyTime(object):
@@ -275,8 +283,8 @@ class NumCompanies(object):
 			values_ncomps.append(max(maximum))
 			gc.collect()
 
-		legend = ["Company w/ most profit"]
-		s.drawPlot(list_len_companies, values_ncomps, "Number of Companies", "Number of Companies", "Money", legend)
+		legend = [["Company w/ most profit"]]
+		s.drawPlot(list_len_companies, values_ncomps, "Number of Companies", "Number of Companies", "Money", legend, per=0.05)
 
 class NumNodes(object):
 	def drawPlot(self, y_data, trucks8, trucks16, title, xlabel, ylabel, legend):
@@ -333,7 +341,7 @@ class Threshold(object):
 			gc.collect()
 			for c in companies:
 				del g.node[c[0]]['company']
-		legend = ["Company w/ most profit"]
+		legend = [["Company w/ most profit"]]
 		s.drawPlot(limits, values_per_threshold, "Threshold", "Threshold", "Money", legend)
 
 class Explosion(object):
@@ -361,7 +369,7 @@ class Explosion(object):
 			maximum = [i[-1] for i in money_per_company]
 			values_per_exp.append(money_per_company[maximum.index(max(maximum))][-1])
 			gc.collect()
-		legend = ["Company w/ most profit"]				
+		legend = [["Company w/ most profit"]]
 		if self.edge:
 			s.drawPlot(range_per_edge_exp, values_per_exp, "Edge Explosion", "% Edge Explosion", "Money", legend, per=0.05)
 		else:
@@ -371,25 +379,29 @@ class TruckExplosion(Explosion):
 	def __init__(self):
 		super().__init__()
 
-# class EdgeExplosion(Explosion):
-# 	def __init__(self):
-# 		super().__init__(edge=True)
+class EdgeExplosion(Explosion):
+	def __init__(self):
+		super().__init__(edge=True)
 
 
 iterations = 100
 tests = 30
+verbosity = False
+verbosity_events = False 
+verbosity_companies = False
 
 if __name__ == '__main__':
 	simulating = True
 	while simulating:
-		print("\nSelect number to choose simulation:")
+		print("\nType number to choose simulation:")
 		print("1 - Money through time")
 		print("2 - Varying the Graph's Type (Random and Scale-free)")
 		print("3 - Varying the Number of Companies")
 		print("4 - Varying the Number of Nodes w/ Number of trucks 8 and 16 (takes a lot of time)")
 		print("5 - Varying the Trucks' Threshold")
 		print("6 - Varying the Percentage of Trucks' Explosion")
-		# print("7 - Varying the Percentage of Edges' Explosion")
+		print("7 - Varying the Percentage of Edges' Explosion")
+		print("-1 - Change Verbosity")
 		print("0 - Terminate\n")
 		try:
 			simulation = int(input("Option:  "))
@@ -400,6 +412,41 @@ if __name__ == '__main__':
 		graph_utils.colormap = []
 		if not simulation:
 			simulating = False
+		elif simulation == -1:
+			while(True):
+				print("\nType number to choose verbosity level:")
+				print("1 - Only number of iterations")
+				print("2 - Iterations and Events (Explosions)")
+				print("3 - Iterations and Companies' Failures and Winnings")
+				print("4 - All above")
+				print("5 - None above")
+				print("0 - Terminate\n")
+				try:
+					verbosity_level = int(input("Option:  "))
+				except Exception as e:
+					print("\nPlease enter a valid integer\n")
+					continue
+				if verbosity_level == 1:
+					verbosity = True
+					break
+				elif verbosity_level == 2:
+					verbosity = True
+					verbosity_events = True
+					break
+				elif verbosity_level == 3:
+					verbosity = True
+					verbosity_companies = True
+					break
+				elif verbosity_level == 4:
+					verbosity = True
+					verbosity_events = True
+					verbosity_companies = True
+					break
+				elif verbosity_level == 5:
+					break
+				elif not verbosity_level:
+					simulating = False
+					break
 		elif simulation == 1:
 			moneyTime = MoneyTime()
 			moneyTime.run()
@@ -418,9 +465,9 @@ if __name__ == '__main__':
 		elif simulation == 6:
 			truckExplosion = TruckExplosion()
 			truckExplosion.run()
-		# elif simulation == 7:
-		# 	edgeExplosion = EdgeExplosion()
-		# 	edgeExplosion.run()
+		elif simulation == 7:
+			edgeExplosion = EdgeExplosion()
+			edgeExplosion.run()
 		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
 
