@@ -14,17 +14,16 @@ class Client:
 		self.utilities = utilities if utilities != [] else self.calculateUtilities(companies)
 		self.min_offer_val = min_offer_val
 		self.max_offer_val = max_offer_val
-		# print(self.utilities)
 
 	def __repr__(self):
 		return f"Client {self.pos} with utilities: {self.utilities} and a risk of {self.risk}"
 
 	def calculateUtilities(self,companies):
-		# pref = np.array([(randint(1,99)/100) for _ in range(len(companies))])
-		# return list(pref/sum(pref))
 		return [1/len(self.companies) for _ in range(len(self.companies))]
 
-
+	def setUtilities(self, utilities):
+		self.utilities = utilities
+		
 	def generate_offer(self, i):
 		return Offer(self.pos, randint(self.min_offer_val, self.max_offer_val), i) if (randint(1,99)/100) < self.risk else None
 
