@@ -60,7 +60,7 @@ class Company:
 		truck.setStatus("livre")
 
 	def truckExplosion(self):
-		truck = random.choice(self.trucks)
+		truck = choice(self.trucks)
 		self.trucks.remove(truck)
 		# vai-se subtrair o custo do caminho feito até agora
 		

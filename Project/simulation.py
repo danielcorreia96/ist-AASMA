@@ -95,39 +95,66 @@ class Simulation(object):
 					min_offer_val=self.min_offer_val, 
 					max_offer_val=self.max_offer_val) for n in graph.nodes if "company" not in graph.node[n]]
 
-	def do_edge_explosion(self, t,graph):
+	def do_edge_explosion(self, t, graph):
 		try:
 			e = choice(list(graph.edges()))
+			graph.remove_edge(e[0],e[1])
 		except Exception as e:
 			print(f"\tall edges removed t= {t}\t")
-			exit()
-		graph.remove_edge(e[0],e[1])
+			return
 		print(f"\tedge removed:\t {e[0]} -- {e[1]} (t={t})")
 
 	def do_truck_explosion(self, t, graph, companies):
 		try:
 			c = choice(companies)
+			c[1].truckExplosion()
 		except Exception as e:
-			print(f"\tNo more companies t= {t}\t")
-			exit()
-		c.truckExplosion()
-		print(f"\tTruck from \t {c.pos} exploded (t={t})")
+			print(f"\tNo more trucks t= {t}\t")
+			return
+		print(f"\tTruck from \t {c[1].pos} exploded (t={t})")
 
 	def do_game_over(self, companies, company, graph,t):
-		print(f"GAME OVER FOR {company[1]} at t={t} -- offers={company[1].completedOffers}")
+		# print(f"GAME OVER FOR {company[1]} at t={t} -- offers={company[1].completedOffers}")
 		companies.remove(company)
 		# del graph.node[company[0]]['company']
 		# graph_utils.colormap[company[0]]= "#%06x" % 0xDDDDDD
 		return company[1]
 
-	def drawPlot(self, y_data, x_data, title, xlabel, ylabel, legend):
+	def generateMoneyPerCompany(self):
+		money_per_company = []
+		for _ in range(self.n_companies):
+			money_per_company.append([])
+			
+		for _ in range(iterations):
+			for m in money_per_company:
+				m.append(0)
+		return money_per_company
+
+	def drawPlot(self, y_data, x_data, title, xlabel, ylabel, legend, per=0.2):
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
-		error = 0.2 * np.array(x_data)
+		error = per * np.array(x_data)
 		plt.errorbar(x=y_data, y=x_data, yerr=error, color="red")
 		plt.legend(legend[0])
 		plt.show()
+
+	def testCicle(self, g, money_per_company, companies, cpy_companies, clients, truckExp=False):
+		for cli in clients:
+				cli.setCompanies([c[1] for c in cpy_companies])
+		for i in range(tests):
+			print(f"\n\n\nITERATION {i}\n\n\n")
+			mc = self.run(g.copy(), list(cpy_companies), list(clients), iterations)
+			for i in range(len(mc)):
+				money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
+			if truckExp:
+				self.generate_trucks(g, companies)
+			cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
+			for cli in clients:
+				cli.setCompanies([c[1] for c in cpy_companies])
+		for mc in money_per_company:
+			mc = np.array(mc)/tests
+		return money_per_company
 
 	def run(self, g, companies, clients, iterations):
 		money_per_company = []
@@ -167,14 +194,13 @@ class Simulation(object):
 				money_per_company[dict_companies[c[1]]][i] = c[1].money
 
 		for c in companies:
-			print(f"SURVIVOR: {c} -- t={i} -- offers={c[1].completedOffers}")
+			# print(f"SURVIVOR: {c} -- t={i} -- offers={c[1].completedOffers}")
 			self.completedOffers += c[1].getCompletedOffers()
 
-		print(f"OFFERS COMPLETED: {self.completedOffers}")
+		# print(f"OFFERS COMPLETED: {self.completedOffers}")
 		return money_per_company
 
 class MoneyTime(object):
-		
 	def drawPlot(self, x_data, title, xlabel, ylabel, legend):
 		plt.title(title)
 		plt.xlabel(xlabel)
@@ -186,9 +212,7 @@ class MoneyTime(object):
 		plt.show()
 
 	def run(self):
-
-		s = Simulation()
-		
+		s = Simulation()	
 		g = s.build_graph()
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
@@ -196,30 +220,9 @@ class MoneyTime(object):
 		graph_utils.show_graphs()
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
-		money_per_company = []
-		for _ in range(s.n_companies):
-			money_per_company.append([])
-		
-		for _ in range(iterations):
-			for m in money_per_company:
-				m.append(0)
-
-		for i in range(tests):
-			print(f"\n\n\nITERATION {i}\n\n\n")
-			mc = s.run(g, list(cpy_companies), list(clients), iterations)
-			for i in range(len(mc)):
-				money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
-			cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-			for cli in clients:
-				cli.setCompanies([c[1] for c in cpy_companies])
-
-		for mc in money_per_company:
-			mc = np.array(mc)/tests
-
+		money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
 		gc.collect()
-		
 		legend = [(graph_utils.colormap[c[0]], c[1].name, c[1].pos) for c in companies]
-		
 		self.drawPlot(money_per_company, "Money vs Time", "Time", "Money", legend)
 
 class GraphTypes(object):
@@ -242,30 +245,11 @@ class GraphTypes(object):
 				s.graph_type = "scale-free"
 				s.graph_param = 2
 			g = s.build_graph()
-			money_per_company = []
 			companies = s.generate_companies(g)
 			s.generate_trucks(g, companies)
 			cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 			clients = s.generate_clients(g, cpy_companies)
-			for _ in range(s.n_companies):
-				money_per_company.append([])
-			
-			for _ in range(iterations):
-				for m in money_per_company:
-					m.append(0)
-
-			for i in range(tests):
-				print(f"\n\n\nITERATION {i}\n\n\n")
-				mc = s.run(g, list(cpy_companies), list(clients), iterations)
-				for i in range(len(mc)):
-					money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
-				cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-				for cli in clients:
-					cli.setCompanies([c[1] for c in cpy_companies])
-
-			for mc in money_per_company:
-				mc = np.array(mc)/tests
-			
+			money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
 			maximum = [i[-1] for i in money_per_company]
 			all_costs.append(money_per_company[maximum.index(max(maximum))])
 			gc.collect()
@@ -276,47 +260,25 @@ class NumCompanies(object):
 	def run(self):
 		s = Simulation(n_nodes=30)
 		g = s.build_graph()
-		money_per_company = []
-		all_costs = []
+		values_ncomps = []
 		list_len_companies = list(range(1,11))
 		for n_companies in list_len_companies:
 			s.n_companies = n_companies
-			money_per_company = []
 			companies = s.generate_companies(g, True)
 			s.generate_trucks(g, companies)
 			cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 			clients = s.generate_clients(g, cpy_companies)
-			for _ in range(s.n_companies):
-				money_per_company.append([])
-			
-			for _ in range(iterations):
-				for m in money_per_company:
-					m.append(0)
-
-			for i in range(tests):
-				print(f"\n\n\nITERATION {i}\n\n\n")
-				mc = s.run(g, list(cpy_companies), list(clients), iterations)
-				for i in range(len(mc)):
-					money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
-				cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-				for cli in clients:
-					cli.setCompanies([c[1] for c in cpy_companies])
-
+			money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
 			for c in companies:
 				del g.node[c[0]]['company']
-
-			for mc in money_per_company:
-				mc = np.array(mc)/tests
-			
 			maximum = [i[-1] for i in money_per_company]
-			all_costs.append(max(maximum))
+			values_ncomps.append(max(maximum))
 			gc.collect()
 
 		legend = ["Company w/ most profit"]
-		s.drawPlot(list_len_companies, all_costs, "Number of Companies", "Number of Companies", "Money", legend)
+		s.drawPlot(list_len_companies, values_ncomps, "Number of Companies", "Number of Companies", "Money", legend)
 
 class NumNodes(object):
-
 	def drawPlot(self, y_data, trucks8, trucks16, title, xlabel, ylabel, legend):
 		plt.title(title)
 		plt.xlabel(xlabel)
@@ -337,164 +299,82 @@ class NumNodes(object):
 			for nodes in list_nodes:
 				s.n_nodes = nodes
 				g = s.build_graph()
-				money_per_company = []
 				companies = s.generate_companies(g, True)
 				s.generate_trucks(g, companies)
 				cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 				clients = s.generate_clients(g, cpy_companies)
-				for _ in range(s.n_companies):
-					money_per_company.append([])
-				
-				for _ in range(iterations):
-					for m in money_per_company:
-						m.append(0)
-
-				for i in range(tests):
-					print(f"\n\n\nITERATION {i}\n\n\n")
-					mc = s.run(g, list(cpy_companies), list(clients), iterations)
-					for i in range(len(mc)):
-						money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
-					cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-					for cli in clients:
-						cli.setCompanies([c[1] for c in cpy_companies])
-
-				for mc in money_per_company:
-					mc = np.array(mc)/tests
-				
+				money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
 				maximum = [i[-1] for i in money_per_company]
 				all_costs.append(max(maximum))
+				gc.collect()
 			if trucks==8:
 				trucks8 = all_costs
 			else:
 				trucks16 = all_costs
-			gc.collect()
 		legend = ["Number of Trucks: 8", "Number of Trucks: 16"]
 		self.drawPlot(list_nodes, trucks8, trucks16, "Number of Nodes/Number of trucks", "Number of Nodes", "Money", legend)
 
 class Threshold(object):
 	def run(self):
+		s = Simulation()
+		g = s.build_graph()
+		values_per_threshold = []	
+		limits = list(range(0,325,25))		
+		for threshold in limits:
+			s.truck_threshold = threshold
+			graph_utils.colormap = []
+			companies = s.generate_companies(g)
+			s.generate_trucks(g, companies)
+			cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
+			clients = s.generate_clients(g, cpy_companies)
+			money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
+			maximum = [i[-1] for i in money_per_company]
+			values_per_threshold.append(money_per_company[maximum.index(max(maximum))][-1])
+			gc.collect()
+			for c in companies:
+				del g.node[c[0]]['company']
+		legend = ["Company w/ most profit"]
+		s.drawPlot(limits, values_per_threshold, "Threshold", "Threshold", "Money", legend)
 
+class Explosion(object):
+	def __init__(self, edge=False):
+		self.edge = edge
+
+	def run(self):
 		s = Simulation()
 		g = s.build_graph()
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
-		graph_utils.draw_graph(g)
-		graph_utils.show_graphs()
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
-		money_per_company = []
-		for _ in range(s.n_companies):
-			money_per_company.append([])
-		
-		for _ in range(iterations):
-			for m in money_per_company:
-				m.append(0)
-
-
-		for i in range(tests):
-			print(f"\n\n\nITERATION {i}\n\n\n")
-			cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-			for cli in clients:
-				cli.setCompanies([c[1] for c in cpy_companies])
-
-
-			mc = s.run(g, list(cpy_companies), list(clients), iterations)
-			for i in range(len(mc)):
-				money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
-			
-		for mc in money_per_company:
-			mc = np.array(mc)/tests
-
-		maximum = [i[len(i)-1] for i in money_per_company]
-		best_company_index = maximum.index(max(maximum))
-		best_company = cpy_companies[best_company_index][1]
-		legend = ["Position: "+str(best_company.pos)]
-		all_costs = []
-
-		limits = list(range(0,325,25))
-		for threshold in limits:
-
-			for _ in range(iterations):
-				for m in range(len(money_per_company)):
-					money_per_company[m] = 0
-
-			for i in range(tests):
-				print(f"\n\n\nITERATION {i}\n\n\n")
-				cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-				for cli in clients:
-					cli.setCompanies([c[1] for c in cpy_companies])
-				
-				best_company = cpy_companies[best_company_index][1]
-				best_company.setTruckThreshold(threshold)
-				mc = s.run(g, list(cpy_companies), list(clients), iterations)
-			
-				for i in range(len(mc)):
-					money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
-			
-			for mc in money_per_company:
-				mc = np.array(mc)/tests
-		
-			all_costs.append(money_per_company[best_company_index][-1])
+		values_per_exp = []
+		range_per_edge_exp = list(np.array(list(range(0,500,10)))/1000)
+		for per_exp in range_per_edge_exp:	
+			if self.edge:
+				s.p_edge_explosion = per_exp
+			else:
+				s.p_truck_explosion = per_exp	
+			if self.edge:
+				money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
+			else:
+				money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients, truckExp=True)
+			maximum = [i[-1] for i in money_per_company]
+			values_per_exp.append(money_per_company[maximum.index(max(maximum))][-1])
 			gc.collect()
+		legend = ["Company w/ most profit"]				
+		if self.edge:
+			s.drawPlot(range_per_edge_exp, values_per_exp, "Edge Explosion", "% Edge Explosion", "Money", legend, per=0.05)
+		else:
+			s.drawPlot(range_per_edge_exp, values_per_exp, "Truck Explosion", "% Truck Explosion", "Money", legend, per=0.05)
 
-		legend = ["Company w/ most profit"]
-		s.drawPlot(limits, all_costs, "Threshold", "Threshold", "Money", legend)
-
-# class Explosion(object):
-# 	def __init__(self, edge=False):
-# 		self.edge = edge
-
-# 	def run(self):
-# 		s = Simulation()
-# 		g = s.build_graph()
-# 		companies = s.generate_companies(g)
-# 		s.generate_trucks(g, companies)
-# 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-# 		clients = s.generate_clients(g, cpy_companies)
-# 		values_per_exp = []
-# 		range_per_edge_exp = list(np.array(list(range(0,10,1)))/1000)
-# 		for per_exp in range_per_edge_exp:	
-# 			money_per_company = []
-# 			if self.edge:
-# 				g.p_edge_explosion = per_exp
-# 			else:
-# 				g.p_truck_explosion = per_exp
-
-# 			for _ in range(s.n_companies):
-# 				money_per_company.append([])
-			
-# 			for _ in range(iterations):
-# 				for m in money_per_company:
-# 					m.append(0)
-
-# 			for i in range(tests):
-# 				print(f"\n\n\nITERATION {i}\n\n\n")
-# 				mc = s.run(g, list(cpy_companies), list(clients), iterations)
-# 				for i in range(len(mc)):
-# 					money_per_company[i] = list(np.array(money_per_company[i]) + np.array(mc[i]))
-# 				cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
-# 				for cli in clients:
-# 					cli.setCompanies([c[1] for c in cpy_companies])
-
-# 			for mc in money_per_company:
-# 				mc = np.array(mc)/tests
-			
-# 			maximum = [i[-1] for i in money_per_company]
-# 			values_per_exp += [money_per_company[maximum.index(max(maximum))]]
-# 			gc.collect()
-# 		legend = ["Company w/ most profit"]				
-# 		if self.edge:
-# 			s.drawPlot(range_per_edge_exp, values_per_exp, "Edge Explosion", "\% Edge Explosion", "Money", legend)
-# 		else:
-# 			s.drawPlot(range_per_edge_exp, values_per_exp, "Truck Explosion", "\% Truck Explosion", "Money", legend)
+class TruckExplosion(Explosion):
+	def __init__(self):
+		super().__init__()
 
 # class EdgeExplosion(Explosion):
 # 	def __init__(self):
-# 		super().__init__(edge=True)				
+# 		super().__init__(edge=True)
 
-# class TruckExplosion(object):
-# 	def __init__(self):
-# 		super().__init__()
 
 iterations = 100
 tests = 30
@@ -508,8 +388,8 @@ if __name__ == '__main__':
 		print("3 - Varying the Number of Companies")
 		print("4 - Varying the Number of Nodes w/ Number of trucks 8 and 16 (takes a lot of time)")
 		print("5 - Varying the Trucks' Threshold")
-		# print("6 - Varying the Percentage of Edges' Explosion")
-		# print("7 - Varying the Percentage of Trucks' Explosion")
+		print("6 - Varying the Percentage of Trucks' Explosion")
+		# print("7 - Varying the Percentage of Edges' Explosion")
 		print("0 - Terminate\n")
 		try:
 			simulation = int(input("Option:  "))
@@ -535,12 +415,12 @@ if __name__ == '__main__':
 		elif simulation == 5:
 			threshold = Threshold()
 			threshold.run()
-		# elif simulation == 6:
+		elif simulation == 6:
+			truckExplosion = TruckExplosion()
+			truckExplosion.run()
+		# elif simulation == 7:
 		# 	edgeExplosion = EdgeExplosion()
 		# 	edgeExplosion.run()
-		# elif simulation == 7:
-			# truckExplosion = TruckExplosion()
-			# truckExplosion.run()
 		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
 
