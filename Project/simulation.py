@@ -494,17 +494,34 @@ iterations = 100
 tests = 30
 
 if __name__ == '__main__':
-	# moneyTime = MoneyTime()
-	# moneyTime.run()
+	simulating = True
+	while simulating:
+		print("\nSelect number to choose simulation:")
+		print("1 - Money through time")
+		print("2 - Varying the Graph's Type (Random and Scale-free)")
+		print("3 - Varying the Number of Companies")
+		print("4 - Varying the Number of Nodes w/ Number of trucks 8 and 16 (takes a lot of time)")
+		print("5 - Varying the Trucks' Threshold")
+		print("0 - Terminate\n")
+		simulation = int(input("Option:  "))
 
-	# graphTypes = GraphTypes()
-	# graphTypes.run()
-	
-	# threshold = Threshold()
-	# threshold.run()
+		if not simulation:
+			simulating = False
+		elif simulation == 1:
+			moneyTime = MoneyTime()
+			moneyTime.run()
+		elif simulation == 2:
+			graphTypes = GraphTypes()
+			graphTypes.run()
+		elif simulation == 3:
+			numCompanies = NumCompanies()
+			numCompanies.run()
+		elif simulation == 4:
+			numNodes = NumNodes()
+			numNodes.run()
+		elif simulation == 5:
+			threshold = Threshold()
+			threshold.run()	
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
-	# numCompanies = NumCompanies()
-	# numCompanies.run()
 
-	# numNodes = NumNodes()
-	# numNodes.run()
