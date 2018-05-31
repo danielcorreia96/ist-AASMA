@@ -85,7 +85,6 @@ class Simulation(object):
 	def calculateUtilities(self):
 		pref = np.array([(randint(1,99)/100) for _ in range(self.n_companies)])
 		return list(pref/sum(pref))
-		# return [1 for _ in range(self.n_companies)]
 
 	def generate_clients(self, graph, companies):
 		return [Client(n, 
@@ -126,6 +125,7 @@ class Simulation(object):
 		return company[1]
 
 	def generateMoneyPerCompany(self):
+		# generates a list of lists (a list per company) to keep track of all companies' money
 		money_per_company = []
 		for _ in range(self.n_companies):
 			money_per_company.append([])
@@ -136,6 +136,7 @@ class Simulation(object):
 		return money_per_company
 
 	def drawPlot(self, y_data, x_data, title, xlabel, ylabel, legend, per=0.2):
+		# Draws the basic plot
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
@@ -145,6 +146,7 @@ class Simulation(object):
 		plt.show()
 
 	def testCicle(self, g, money_per_company, companies, cpy_companies, clients, truckExp=False):
+		# cicle for "tests" times, and does the mean for all the values
 		for cli in clients:
 				cli.setCompanies([c[1] for c in cpy_companies])
 		for i in range(tests):
@@ -412,6 +414,36 @@ class ProfitMargin(SimulationObject):
 		legend = [["Company w/ worst profit"]]
 		s.drawPlot(profitMaring_values, values_pm_company, "Profit Margin", "Profit Margin", "Money", legend, per=0.05)
 
+class Preferences(SimulationObject):
+	def run(self):
+		s = Simulation(graph_type=self.type, graph_param=self.graph_param)
+		g = s.build_graph()
+		while not nx.is_connected(g):
+			print("not connected")
+			g = s.build_graph()
+		companies = s.generate_companies(g)
+		s.generate_trucks(g, companies)
+		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
+		clients = s.generate_clients(g, cpy_companies)
+		basic_preferences = [1/s.n_companies for _ in range(s.n_companies)]
+		for cli in clients:
+			cli.setUtilities(basic_preferences)
+			cli.risk=1
+		money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
+		minimum = [m[-1] for m in money_per_company]
+		index_company = minimum.index(min(minimum))
+		# values for index_company for different values of preferences
+		values_company_preferences = []
+		preferences_values = list(np.array(list(range(20,101,1)))/100)		
+		for pref in preferences_values:
+			for cli in clients:
+				cli.utilities[index_company]=pref
+			money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
+			values_company_preferences.append(money_per_company[index_company][-1])
+			gc.collect()
+		legend = [["Company w/ worst profit"]]
+		s.drawPlot(preferences_values, values_company_preferences, "Preferences", "Preferences (%)", "Money", legend, per=0.05)
+
 class Menu(object):		
 	def clearWindow(self):
 		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
@@ -567,7 +599,7 @@ class Menu(object):
 			print("6 - Varying the Percentage of Trucks' Explosion")
 			print("7 - Varying the Percentage of Edges' Explosion")
 			print("8 - Varying the Most Profit Company's Profit Margin")
-			# print("9 - Varying the clients' preferences for the Company with less money")
+			print("9 - Varying the clients' preferences for a company")
 			print("-1 - Options")
 			
 			print("0 - Terminate\n")
@@ -608,9 +640,9 @@ class Menu(object):
 			elif simulation == 8:
 				profitMargin = ProfitMargin(graphType)
 				profitMargin.run()
-			# elif simulation == 9:
-			# 	preferences = Preferences()
-			# 	preferences.run()
+			elif simulation == 9:
+				preferences = Preferences(graphType)
+				preferences.run()
 			else:
 				self.clearWindow()
 				print(f"\n{simulation} is not a valid simulation...\n")
