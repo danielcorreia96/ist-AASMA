@@ -438,8 +438,6 @@ class Preferences(SimulationObject):
 			g = s.build_graph()
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
-		graph_utils.draw_graph(g)
-		graph_utils.show_graphs()
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
 		basic_preferences = [1/s.n_companies for _ in range(s.n_companies)]
@@ -472,7 +470,6 @@ class Preferences(SimulationObject):
 		else:
 			s.drawPlot(preferences_values, values_company_preferences, "Preferences", "Preferences (%)", "Money", self.legend, per=0.05)
 
-
 class LastPreferences(Preferences):
 	def __init__(self, graphType):
 		super().__init__(graphType, legend=[["Company w/ worst profit"]], last=True)
@@ -481,8 +478,11 @@ class SecondAndBestPreferences(Preferences):
 	def __init__(self, graphType):
 		super().__init__(graphType, legend=["2nd Company w/ best profit","1st Company w/ best profit"])
 		
-class Menu(object):		
+class Menu(object):
 	def clearWindow(self):
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
 
