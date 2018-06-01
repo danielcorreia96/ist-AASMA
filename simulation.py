@@ -435,7 +435,10 @@ class Preferences(SimulationObject):
 		plt.show()
 
 	def run(self):
-		s = Simulation(graph_type=self.type, graph_param=self.graph_param, n_companies=2)
+		if not self.last:
+			s = Simulation(graph_type=self.type, graph_param=self.graph_param, n_companies=2)
+		else:
+			s = Simulation(graph_type=self.type, graph_param=self.graph_param)
 		g = s.build_graph()
 		while not nx.is_connected(g):
 			g = s.build_graph()
@@ -485,12 +488,12 @@ class SecondAndBestPreferences(Preferences):
 		
 class Menu(object):
 	def clearWindow(self):
-		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		print("\n-------------------------------------------------------------")
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		# print("\n-------------------------------------------------------------")
 
 	def levelVerbosity(self):
 		if verbosity and verbosity_events and verbosity_companies:
