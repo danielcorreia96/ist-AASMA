@@ -415,14 +415,31 @@ class ProfitMargin(SimulationObject):
 		s.drawPlot(profitMaring_values, values_pm_company, "Profit Margin", "Profit Margin", "Money", legend, per=0.05)
 
 class Preferences(SimulationObject):
+	def __init__(self, graphType, legend, last=False):
+		super().__init__(graphType)
+		self.last = last
+		self.legend = legend
+
+	def drawPlot(self, pref_values, second_company, best_company, title, xlabel, ylabel, legend):
+		plt.title(title)
+		plt.xlabel(xlabel)
+		plt.ylabel(ylabel)
+		sec_error = 0.05 * np.array(second_company)
+		best_error = 0.05 * np.array(best_company)
+		plt.errorbar(pref_values, second_company, yerr=sec_error, label=legend[0], color="red")
+		plt.errorbar(pref_values, best_company, yerr=best_error, label=legend[1], color="blue")
+		plt.legend()
+		plt.show()
+
 	def run(self):
-		s = Simulation(graph_type=self.type, graph_param=self.graph_param)
+		s = Simulation(graph_type=self.type, graph_param=self.graph_param, n_companies=2)
 		g = s.build_graph()
 		while not nx.is_connected(g):
-			print("not connected")
 			g = s.build_graph()
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
+		graph_utils.draw_graph(g)
+		graph_utils.show_graphs()
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
 		basic_preferences = [1/s.n_companies for _ in range(s.n_companies)]
@@ -430,20 +447,40 @@ class Preferences(SimulationObject):
 			cli.setUtilities(basic_preferences)
 			cli.risk=1
 		money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
-		minimum = [m[-1] for m in money_per_company]
-		index_company = minimum.index(min(minimum))
+		if not self.last:
+			maximum = [m[-1] for m in money_per_company]
+			index_best_company = maximum.index(max(maximum))
+			maximum[index_best_company] = 0
+			index_company = maximum.index(max(maximum))
+		else:
+			minimum = [m[-1] for m in money_per_company]
+			index_company = minimum.index(min(minimum))
 		# values for index_company for different values of preferences
 		values_company_preferences = []
-		preferences_values = list(np.array(list(range(20,101,1)))/100)		
+		values_best_company = []
+		preferences_values = list(np.array(list(range(20,101,1)))/100)
 		for pref in preferences_values:
 			for cli in clients:
 				cli.utilities[index_company]=pref
 			money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
 			values_company_preferences.append(money_per_company[index_company][-1])
+			if not self.last:
+				values_best_company.append(money_per_company[index_best_company][-1])
 			gc.collect()
-		legend = [["Company w/ worst profit"]]
-		s.drawPlot(preferences_values, values_company_preferences, "Preferences", "Preferences (%)", "Money", legend, per=0.05)
+		if not self.last:	
+			self.drawPlot(preferences_values, values_company_preferences, values_best_company, "Preferences", "Preferences (%)", "Money", self.legend)
+		else:
+			s.drawPlot(preferences_values, values_company_preferences, "Preferences", "Preferences (%)", "Money", self.legend, per=0.05)
 
+
+class LastPreferences(Preferences):
+	def __init__(self, graphType):
+		super().__init__(graphType, legend=[["Company w/ worst profit"]], last=True)
+
+class SecondAndBestPreferences(Preferences):
+	def __init__(self, graphType):
+		super().__init__(graphType, legend=["2nd Company w/ best profit","1st Company w/ best profit"])
+		
 class Menu(object):		
 	def clearWindow(self):
 		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
@@ -585,6 +622,46 @@ class Menu(object):
 				print(f"\n{option} in not a valid option...\n")
 				continue
 
+	def choosePreference(self):
+		global simulating
+		while True:
+			print("\nType number to choose which preferences to vary:")
+			print("1 - Varying the clients' preferences for the worst company")
+			print("2 - Varying the clients' preferences for the second best company")
+			print("3 - None")
+			print("0 - Terminate\n")
+			try:
+				option = int(input("Option:  "))
+			except Exception as e:
+				self.clearWindow()
+				print("\nPlease enter a valid integer\n")
+				continue
+			if option == 1:
+				preferences = LastPreferences(graphType)
+				try:
+					preferences.run()
+				except Warning as e:
+					print("error")
+					return		
+				return
+			elif option == 2:
+				preferences = SecondAndBestPreferences(graphType)
+				try:
+					preferences.run()
+				except Warning as e:
+					print("error")
+					return
+				return
+			elif option == 3:
+				return
+			elif option == 0:
+				simulating = False
+				return
+			else:
+				self.clearWindow()
+				print(f"\n{option} in not a valid option...\n")
+				continue
+
 	def start(self):
 		global simulating
 		self.clearWindow()
@@ -641,8 +718,8 @@ class Menu(object):
 				profitMargin = ProfitMargin(graphType)
 				profitMargin.run()
 			elif simulation == 9:
-				preferences = Preferences(graphType)
-				preferences.run()
+				self.clearWindow()
+				self.choosePreference()
 			else:
 				self.clearWindow()
 				print(f"\n{simulation} is not a valid simulation...\n")
