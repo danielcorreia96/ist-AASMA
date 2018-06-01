@@ -135,14 +135,14 @@ class Simulation(object):
 				m.append(0)
 		return money_per_company
 
-	def drawPlot(self, y_data, x_data, title, xlabel, ylabel, legend, per=0.2):
+	def drawPlot(self, y_data, x_data, title, xlabel, ylabel, legend, per=0.2, color="red"):
 		# Draws the basic plot
 		plt.figure()
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 		error = per * np.array(x_data)
-		plt.errorbar(x=y_data, y=x_data, yerr=error, color="red")
+		plt.errorbar(x=y_data, y=x_data, yerr=error, color=color)
 		plt.legend(legend[0])
 		plt.show()
 
@@ -398,6 +398,7 @@ class ProfitMargin(SimulationObject):
 		s = Simulation(graph_type=self.type, graph_param=self.graph_param)
 		g = s.build_graph()
 		companies = s.generate_companies(g)
+		graph_utils.draw_graph(g)
 		s.generate_trucks(g, companies)
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
@@ -409,12 +410,11 @@ class ProfitMargin(SimulationObject):
 		profitMaring_values = list(np.array(list(range(10,50,1)))/10)		
 		for pm in profitMaring_values:
 			companies[index_company][1].setProfitMargin(pm)
-			graph_utils.colormap = []
 			money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
 			values_pm_company.append(money_per_company[index_company][-1])
 			gc.collect()
-		legend = [["Company w/ worst profit"]]
-		s.drawPlot(profitMaring_values, values_pm_company, "Profit Margin", "Profit Margin", "Money", legend, per=0.05)
+		legend = [["Company w/ worst profit: "+str(companies[index_company][1].pos)]]
+		s.drawPlot(profitMaring_values, values_pm_company, "Profit Margin", "Profit Margin", "Money", legend, per=0.05, color=graph_utils.colormap[companies[index_company][0]])
 
 class Preferences(SimulationObject):
 	def __init__(self, graphType, legend, last=False):
@@ -422,30 +422,26 @@ class Preferences(SimulationObject):
 		self.last = last
 		self.legend = legend
 
-	def drawPlot(self, pref_values, second_company, best_company, title, xlabel, ylabel, legend):
+	def drawPlot(self, pref_values, second_company, best_company, title, xlabel, ylabel, legend, color):
 		plt.figure()
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
 		sec_error = 0.05 * np.array(second_company)
 		best_error = 0.05 * np.array(best_company)
-		plt.errorbar(pref_values, second_company, yerr=sec_error, label=legend[0], color="red")
-		plt.errorbar(pref_values, best_company, yerr=best_error, label=legend[1], color="blue")
+		plt.errorbar(pref_values, second_company, yerr=sec_error, label=legend[0], color=color[0])
+		plt.errorbar(pref_values, best_company, yerr=best_error, label=legend[1], color=color[1])
 		plt.legend()
 		plt.show()
 
 	def run(self):
-		if not self.last:
-			s = Simulation(graph_type=self.type, graph_param=self.graph_param, n_companies=2)
-		else:
-			s = Simulation(graph_type=self.type, graph_param=self.graph_param)
+		s = Simulation(graph_type=self.type, graph_param=self.graph_param)
 		g = s.build_graph()
 		while not nx.is_connected(g):
 			g = s.build_graph()
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
 		graph_utils.draw_graph(g)
-		#graph_utils.show_graphs()
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
 		basic_preferences = [1/s.n_companies for _ in range(s.n_companies)]
@@ -473,18 +469,22 @@ class Preferences(SimulationObject):
 			if not self.last:
 				values_best_company.append(money_per_company[index_best_company][-1])
 			gc.collect()
-		if not self.last:	
-			self.drawPlot(preferences_values, values_company_preferences, values_best_company, "Preferences", "Preferences (%)", "Money", self.legend)
+		
+		if not self.last:
+			self.legend[0] = self.legend[0] + str(companies[index_company][1].pos)
+			self.legend[1] = self.legend[1] + str(companies[index_best_company][1].pos)
+			self.drawPlot(preferences_values, values_company_preferences, values_best_company, "Preferences", "Preferences (%)", "Money", self.legend, color=[graph_utils.colormap[companies[index_company][0]], graph_utils.colormap[companies[index_best_company][0]]])
 		else:
-			s.drawPlot(preferences_values, values_company_preferences, "Preferences", "Preferences (%)", "Money", self.legend, per=0.05)
+			self.legend[0] = [self.legend[0][0] + str(companies[index_company][1].pos)]
+			s.drawPlot(preferences_values, values_company_preferences, "Preferences", "Preferences (%)", "Money", self.legend, per=0.05, color=graph_utils.colormap[companies[index_company][0]])
 
 class LastPreferences(Preferences):
 	def __init__(self, graphType):
-		super().__init__(graphType, legend=[["Company w/ worst profit"]], last=True)
+		super().__init__(graphType, legend=[["Company w/ worst profit: "]], last=True)
 
 class SecondAndBestPreferences(Preferences):
 	def __init__(self, graphType):
-		super().__init__(graphType, legend=["2nd Company w/ best profit","1st Company w/ best profit"])
+		super().__init__(graphType, legend=["2nd Company w/ best profit: ","1st Company w/ best profit: "])
 		
 class Menu(object):
 	def clearWindow(self):
