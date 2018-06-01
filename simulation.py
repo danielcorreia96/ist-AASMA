@@ -137,6 +137,7 @@ class Simulation(object):
 
 	def drawPlot(self, y_data, x_data, title, xlabel, ylabel, legend, per=0.2):
 		# Draws the basic plot
+		plt.figure()
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
@@ -217,6 +218,7 @@ class SimulationObject(object):
 		
 class MoneyTime(SimulationObject):
 	def drawPlot(self, x_data, title, xlabel, ylabel, legend):
+		plt.figure()
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
@@ -232,7 +234,7 @@ class MoneyTime(SimulationObject):
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
 		graph_utils.draw_graph(g)
-		graph_utils.show_graphs()
+		#graph_utils.show_graphs()
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
 		money_per_company = s.testCicle(g, s.generateMoneyPerCompany(), companies, cpy_companies, clients)
@@ -421,6 +423,7 @@ class Preferences(SimulationObject):
 		self.legend = legend
 
 	def drawPlot(self, pref_values, second_company, best_company, title, xlabel, ylabel, legend):
+		plt.figure()
 		plt.title(title)
 		plt.xlabel(xlabel)
 		plt.ylabel(ylabel)
@@ -438,6 +441,8 @@ class Preferences(SimulationObject):
 			g = s.build_graph()
 		companies = s.generate_companies(g)
 		s.generate_trucks(g, companies)
+		graph_utils.draw_graph(g)
+		#graph_utils.show_graphs()
 		cpy_companies = [(c[0], copy.deepcopy(c[1])) for c in companies]
 		clients = s.generate_clients(g, cpy_companies)
 		basic_preferences = [1/s.n_companies for _ in range(s.n_companies)]
@@ -480,11 +485,12 @@ class SecondAndBestPreferences(Preferences):
 		
 class Menu(object):
 	def clearWindow(self):
-		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-		print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		# print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
+		print("\n-------------------------------------------------------------")
 
 	def levelVerbosity(self):
 		if verbosity and verbosity_events and verbosity_companies:
