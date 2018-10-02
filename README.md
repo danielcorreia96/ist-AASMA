@@ -8,5 +8,5 @@
 
 [Enunciado]( )
 
-Nota: /20
+Nota: 20/20
 
